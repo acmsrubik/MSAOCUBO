@@ -23,3 +23,6 @@ th { background: #e8eefb; }
 a { color: #0b3d91; text-decoration: none; }
 .erro { color: #b00020; background: #fdecea; padding: 1rem; border-radius: 8px; }
 .scroll { overflow-x: auto; }
+.modalidade { background: #fff; border-radius: 12px; box-shadow: 0 1px 4px #0001; margin-bottom: .75rem; padding: .25rem 1rem .75rem; }
+.modalidade summary { cursor: pointer; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: .75rem 0; font-weight: 600; font-size: 1.05rem; }
+.modalidade .recorde { font-weight: 400; font-size: .9rem; color: #0b3d91; }
