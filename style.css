@@ -1,0 +1,25 @@
+body { font-family: system-ui, sans-serif; margin: 0; background: #f4f6fb; color: #1a1a2e; }
+header { background: #0b3d91; color: #fff; padding: 1.2rem 1.5rem; }
+header h1 { margin: 0; font-size: 1.5rem; }
+header p { margin: .25rem 0 0; opacity: .8; }
+main { max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; }
+section { margin-bottom: 2rem; }
+.busca { background: #fff; padding: 1rem 1.25rem; border-radius: 12px; box-shadow: 0 1px 4px #0001; }
+.busca h2 { margin-top: 0; }
+.linha { display: flex; gap: .5rem; }
+input { flex: 1; padding: .6rem; border-radius: 8px; border: 1px solid #ccd; font-size: 1rem; text-transform: uppercase; }
+button { padding: .6rem 1.2rem; border: 0; border-radius: 8px; background: #0b3d91; color: #fff; font-size: 1rem; cursor: pointer; }
+.filtros { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+label { display: flex; flex-direction: column; font-size: .85rem; gap: .25rem; }
+select { padding: .5rem; border-radius: 8px; border: 1px solid #ccd; font-size: 1rem; }
+h2 { margin: 1.2rem 0 .5rem; }
+.destaque { display: flex; justify-content: space-between; align-items: center; background: #0b3d91; color: #fff; padding: 1rem 1.25rem; border-radius: 12px; font-size: 1.2rem; }
+.destaque strong { font-size: 1.8rem; }
+.perfil { margin: 1rem 0 .5rem; }
+.perfil strong { font-size: 1.3rem; }
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px #0001; }
+th, td { padding: .6rem .8rem; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #e8eefb; }
+a { color: #0b3d91; text-decoration: none; }
+.erro { color: #b00020; background: #fdecea; padding: 1rem; border-radius: 8px; }
+.scroll { overflow-x: auto; }

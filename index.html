@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cubo Mágico MS</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>🧩 Cubo Mágico MS</h1>
+    <p>Rankings oficiais da WCA</p>
+  </header>
+  <main>
+    <section class="busca">
+      <h2>🔎 Buscar cubista pelo WCA ID</h2>
+      <div class="linha">
+        <input id="wcaid" placeholder="Ex: 2015SOLE01" maxlength="10" />
+        <button id="btnBuscar">Buscar</button>
+      </div>
+      <div id="pessoa"></div>
+    </section>
+
+    <section>
+      <h2>🏆 Rankings</h2>
+      <div class="filtros">
+        <label>Modalidade <select id="evento"></select></label>
+        <label>Tipo
+          <select id="tipo">
+            <option value="single">Single (melhor tempo)</option>
+            <option value="average">Média</option>
+          </select>
+        </label>
+      </div>
+      <div id="resultado">Carregando...</div>
+    </section>
+  </main>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
