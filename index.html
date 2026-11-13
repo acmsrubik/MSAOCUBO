@@ -1,31 +1,178 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cubo Mágico MS</title>
+  <title>Cubo Mágico MS | Federação & Comunidade Oficial</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Estilo das abas estilo Facebook mantendo suas cores oficiais */
+    .top-nav { background: #fff !important; border-bottom: 1px solid #e4e6eb; position: sticky; top: 0; z-index: 900; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
+    .tabs { display: flex; gap: 6px; align-items: center; }
+    .tab-btn { border: none !important; background: transparent !important; color: #65676b !important; border-bottom: 3px solid transparent !important; border-radius: 8px 8px 0 0 !important; padding: 14px 18px !important; font-weight: 700 !important; transition: all 0.2s; }
+    .tab-btn:hover { background: #f0f2f5 !important; color: #002454 !important; }
+    .tab-btn.active { color: #002454 !important; border-bottom: 3px solid #E30613 !important; background: transparent !important; }
+    /* Estilo dos cards do Feed Social */
+    .feed-box { max-width: 720px; margin: 0 auto; }
+    .social-card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e4e6eb; }
+    .social-input { width: 100%; background: #f0f2f5; border: none; border-radius: 20px; padding: 12px 16px; font-size: 14px; outline: none; }
+    .social-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e4e6eb; }
+    .btn-social-red { background: #E30613; color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .btn-social-gray { background: #f0f2f5; color: #002454; border: none; padding: 7px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; }
+    .solve-badge { background: #f8f9fa; border-left: 4px solid #E30613; padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>🧩 Cubo Mágico MS</h1>
-    <p>Rankings oficiais da WCA</p>
-  </header>
-  <main>
-    <section class="busca">
-      <h2>🔎 Buscar cubista pelo WCA ID</h2>
-      <div class="linha">
-        <input id="wcaid" placeholder="Ex: 2015SOLE01" maxlength="10" />
-        <button id="btnBuscar">Buscar</button>
+  <header class="top-nav">
+    <div class="container nav-flex">
+      <div class="brand">
+        <div class="logo-cms">CMS</div>
+        <div>
+          <h1>CUBO MÁGICO MS</h1>
+          <span>RANKINGS, COMUNIDADE & RECORDES OFICIAIS WCA</span>
+        </div>
       </div>
-      <div id="pessoa"></div>
-    </section>
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="tab-inicio">🏠 INÍCIO</button>
+        <button class="tab-btn" data-tab="tab-feed">💬 FEED CUBISTA</button>
+        <button class="tab-btn" data-tab="tab-rankings">🏆 RANKINGS WCA</button>
+        <button class="tab-btn" data-tab="tab-dashboard">📊 DASHBOARD</button>
+      </nav>
+    </div>
+  </header>
 
-    <section>
-      <h2>🏆 Top 10 mundial por média (todas as modalidades)</h2>
-      <div id="resultado">Carregando...</div>
-    </section>
+  <section class="hero">
+    <div class="container">
+      <span class="badge">TEMPORADA OFICIAL WCA</span>
+      <h2 id="hero-titulo">CALENDÁRIO OFICIAL & NOTÍCIAS DO CUBO MÁGICO</h2>
+      <p id="hero-sub">Confira as competições oficiais no Brasil nos próximos 30 dias e acompanhe as últimas novidades.</p>
+    </div>
+  </section>
+  <main class="container">
+    <!-- ABA 1: INÍCIO (CALENDÁRIO OFICIAL WCA & NOTÍCIAS) -->
+    <div id="tab-inicio" class="tab-view" style="display: block;">
+      <section class="card-section">
+        <h3 class="sec-title">PRÓXIMAS COMPETIÇÕES NO BRASIL (PRÓXIMOS 30 DIAS)</h3>
+        <div id="proximas-comps">Carregando calendário oficial da WCA...</div>
+      </section>
+
+      <section class="card-section" style="margin-top: 24px;">
+        <h3 class="sec-title">ÚLTIMAS NOTÍCIAS & COMUNICADOS</h3>
+        <div id="lista-noticias">Carregando notícias...</div>
+      </section>
+    </div>
+
+    <!-- ABA 2: FEED CUBISTA (REDE SOCIAL) -->
+    <div id="tab-feed" class="tab-view" style="display: none;">
+      <div class="feed-box">
+        <div class="social-card">
+          <input type="text" id="feed-texto" class="social-input" placeholder="Compartilhe um PB, treino ou dúvida com os cubistas...">
+          <div id="feed-tempo-box" style="display:none; gap:8px; margin-top:10px;">
+            <input type="text" id="feed-tempo" placeholder="Tempo (ex: 8.95s)" style="padding:8px; border:1px solid #ccc; border-radius:6px; width:130px;">
+            <select id="feed-mod" style="padding:8px; border:1px solid #ccc; border-radius:6px;">
+              <option>3x3x3</option><option>2x2x2</option><option>4x4x4</option><option>Pyraminx</option><option>3x3 OH</option>
+            </select>
+            <input type="text" id="feed-scramble" placeholder="Scramble (opcional)" style="padding:8px; border:1px solid #ccc; border-radius:6px; flex:1;">
+          </div>
+          <div class="social-actions">
+            <button type="button" class="btn-social-gray" onclick="document.getElementById('feed-tempo-box').style.display = document.getElementById('feed-tempo-box').style.display === 'none' ? 'flex' : 'none'">⏱️ Adicionar Tempo / PB</button>
+            <button type="button" class="btn-social-red" onclick="publicarNoFeed()">Publicar no Feed</button>
+          </div>
+        </div>
+        <div id="feed-lista"></div>
+      </div>
+    </div>
+
+    <!-- ABA 3: RANKINGS WCA & BUSCA DE ATLETAS -->
+    <div id="tab-rankings" class="tab-view" style="display: none;">
+      <section class="busca card-section">
+        <h3>🔎 BUSCAR CUBISTA PELO WCA ID</h3>
+        <div class="linha" style="display:flex; gap:10px; margin-top:10px;">
+          <input id="wcaid" placeholder="Ex: 2015SOLE01" maxlength="10" style="padding:10px; border:1px solid #ccc; border-radius:6px;" />
+          <button id="btn-buscar" style="background:#002454; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer;">BUSCAR ATLETA</button>
+        </div>
+        <div id="pessoa"></div>
+      </section>
+
+      <section class="card-section" style="margin-top: 24px;">
+        <h3>🏆 RANKINGS & RECORDES OFICIAIS WCA</h3>
+        <div id="resultado">Carregando rankings...</div>
+      </section>
+    </div>
+
+    <!-- ABA 4: DASHBOARD NACIONAL -->
+    <div id="tab-dashboard" class="tab-view" style="display: none;">
+      <div id="dashboard-root"></div>
+    </div>
   </main>
+
+  <!-- SEUS SCRIPTS ORIGINAIS DA WCA, DASHBOARD E LOGIN -->
+  <script src="chart.min.js"></script>
+  <script src="inicio.js"></script>
   <script type="module" src="main.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="auth-editorial.js?v=13"></script>
+
+  <!-- SCRIPT DO FEED SOCIAL -->
+  <script>
+    const postsBase = [
+      { id: 1, autor: "Cubo Mágico MS • Oficial", data: "Hoje", texto: "Bem-vindos ao Feed da Comunidade Cubista de MS! Postem seus PBs e treinos aqui.", tempo: "", mod: "", scramble: "", likes: 12, liked: false, comentarios: [] }
+    ];
+    let postsCubistas = JSON.parse(localStorage.getItem("cms_feed_v1")) || postsBase;
+
+    function renderFeed() {
+      const box = document.getElementById("feed-lista");
+      if (!box) return;
+      box.innerHTML = postsCubistas.map(p => `
+        <div class="social-card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <strong style="color:#002454;">${p.autor}</strong>
+            <span style="font-size:12px; color:#65676b;">${p.data}</span>
+          </div>
+          <p style="font-size:14px; line-height:1.4;">${p.texto}</p>
+          ${p.tempo ? `<div class="solve-badge"><strong style="font-size:18px; color:#002454;">⏱️ ${p.tempo}</strong> <span style="font-size:12px; color:#E30613; font-weight:bold;">(${p.mod})</span>${p.scramble ? `<div style="font-family:monospace; font-size:12px; color:#555; margin-top:4px;">Scramble: ${p.scramble}</div>` : ""}</div>` : ""}
+          <div class="social-actions">
+            <button type="button" class="btn-social-gray" style="color:${p.liked ? '#E30613' : '#002454'}" onclick="curtirFeed(${p.id})">👏 Parabéns (${p.likes})</button>
+            <button type="button" class="btn-social-gray" onclick="comentarFeed(${p.id})">💬 Comentar (${p.comentarios.length})</button>
+          </div>
+          ${p.comentarios.length ? `<div style="margin-top:10px; padding-top:8px; border-top:1px solid #eee;">${p.comentarios.map(c => `<div style="background:#f0f2f5; padding:6px 12px; border-radius:10px; font-size:13px; margin-bottom:4px;"><strong>${c.autor}:</strong> ${c.texto}</div>`).join("")}</div>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function publicarNoFeed() {
+      const texto = document.getElementById("feed-texto").value.trim();
+      const tempo = document.getElementById("feed-tempo").value.trim();
+      const mod = document.getElementById("feed-mod").value;
+      const scramble = document.getElementById("feed-scramble").value.trim();
+      if (!texto && !tempo) return alert("Digite uma mensagem ou um tempo!");
+      postsCubistas.unshift({ id: Date.now(), autor: "Jefferson", data: "Agora mesmo", texto: texto || `Novo tempo registrado no ${mod}!`, tempo, mod, scramble, likes: 0, liked: false, comentarios: [] });
+      localStorage.setItem("cms_feed_v1", JSON.stringify(postsCubistas));
+      document.getElementById("feed-texto").value = "";
+      document.getElementById("feed-tempo").value = "";
+      document.getElementById("feed-scramble").value = "";
+      renderFeed();
+    }
+
+    function curtirFeed(id) {
+      const p = postsCubistas.find(x => x.id === id);
+      if (p) { p.liked = !p.liked; p.likes += p.liked ? 1 : -1; localStorage.setItem("cms_feed_v1", JSON.stringify(postsCubistas)); renderFeed(); }
+    }
+
+    function comentarFeed(id) {
+      const msg = prompt("Escreva seu comentário:");
+      if (!msg || !msg.trim()) return;
+      const p = postsCubistas.find(x => x.id === id);
+      if (p) { p.comentarios.push({ autor: "Jefferson", texto: msg.trim() }); localStorage.setItem("cms_feed_v1", JSON.stringify(postsCubistas)); renderFeed(); }
+    }
+
+    // Garante que a aba Feed funcione junto com as abas originais
+    document.querySelector('[data-tab="tab-feed"]')?.addEventListener("click", () => {
+      document.getElementById("hero-titulo").textContent = "COMUNIDADE & FEED DOS CUBISTAS";
+      document.getElementById("hero-sub").textContent = "Compartilhe seus melhores tempos (PBs), scrambles e novidades do cubo mágico.";
+    });
+
+    renderFeed();
+  </script>
 </body>
 </html>

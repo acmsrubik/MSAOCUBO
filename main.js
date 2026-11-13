@@ -1,130 +1,66 @@
-const WCA = "https://www.worldcubeassociation.org/api/v0";
-
-const EVENTOS = [
-  ["333", "3x3x3"], ["222", "2x2x2"], ["444", "4x4x4"], ["555", "5x5x5"],
-  ["666", "6x6x6"], ["777", "7x7x7"], ["333bf", "3x3 Olhos Vendados"],
-  ["333fm", "Menos Movimentos"], ["333oh", "3x3 Uma Mão"], ["clock", "Clock"],
-  ["minx", "Megaminx"], ["pyram", "Pyraminx"], ["skewb", "Skewb"],
-  ["sq1", "Square-1"], ["444bf", "4x4 Olhos Vendados"],
-  ["555bf", "5x5 Olhos Vendados"], ["333mbf", "Multi-Blind"],
-];
-const NOME = Object.fromEntries(EVENTOS);
-
-const out = document.getElementById("resultado");
-const boxPessoa = document.getElementById("pessoa");
-const inputId = document.getElementById("wcaid");
-
-async function get(url) {
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`Erro ${r.status}`);
-  return r.json();
+const API = "https:" + "//www.worldcubeassociation." + "org/api/v0";
+const SITE = "https:" + "//www.worldcubeassociation." + "org";
+const EVENTOS = [["333","3x3x3"],["222","2x2x2"],["444","4x4x4"],["555","5x5x5"],["666","6x6x6"],["777","7x7x7"],["333bf","3x3 Olhos Vendados"],["333fm","Menos Movimentos"],["333oh","3x3 Uma Mão"],["clock","Clock"],["minx","Megaminx"],["pyram","Pyraminx"],["skewb","Skewb"],["sq1","Square-1"],["444bf","4x4 Olhos Vendados"],["555bf","5x5 Olhos Vendados"],["333mbf","Multi-Blind"]];
+const REGIOES = [["world","MUNDO (TOP 100 GLOBAL)"],["Brazil","BRASIL"],["USA","ESTADOS UNIDOS"],["China","CHINA"],["Poland","POLÔNIA"],["Hong Kong","HONG KONG"],["Russia","RÚSSIA"],["United Kingdom","REINO UNIDO"],["Chile","CHILE"],["Argentina","ARGENTINA"],["Colombia","COLÔMBIA"],["Mexico","MÉXICO"],["Portugal","PORTUGAL"],["Spain","ESPANHA"],["Japan","JAPÃO"],["Korea","COREIA DO SUL"],["Australia","AUSTRÁLIA"]];
+const out = document.getElementById("resultado"), boxPessoa = document.getElementById("pessoa"), inputId = document.getElementById("wcaid");
+const tradutorPais = new Intl.DisplayNames(["pt-BR"], { type: "region" });
+function nomePais(cod) {
+  if (!cod) return "—";
+  try { return cod.length === 2 ? tradutorPais.of(cod.toUpperCase()) : cod; } catch { return cod; }
 }
-
-function formatar(valor, evento, tipo) {
-  if (valor == null || valor <= 0) return "—";
-  if (evento === "333mbf") {
-    const s = String(valor).padStart(9, "0");
-    const dd = parseInt(s.slice(0, 2));
-    const tempo = parseInt(s.slice(2, 7));
-    const erros = parseInt(s.slice(7, 9));
-    const certos = 99 - dd + erros;
-    const m = Math.floor(tempo / 60);
-    const sec = String(tempo % 60).padStart(2, "0");
-    return `${certos}/${certos + erros} em ${m}:${sec}`;
+function formatar(v, ev, tipo) {
+  if (v == null || v <= 0) return "—";
+  if (ev === "333mbf") {
+    const s = String(v).padStart(9, "0"), c = 99 - parseInt(s.slice(0, 2)) + parseInt(s.slice(7, 9)), t = parseInt(s.slice(2, 7));
+    return `${c}/${c + parseInt(s.slice(7, 9))} em ${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;
   }
-  if (evento === "333fm") {
-    return tipo === "average" ? (valor / 100).toFixed(2) : String(valor);
-  }
-  const total = valor / 100;
-  const m = Math.floor(total / 60);
-  const s = (total % 60).toFixed(2).padStart(m ? 5 : 1, "0");
-  return m ? `${m}:${s}` : s;
+  if (ev === "333fm") return tipo === "average" ? (v / 100).toFixed(2) : String(v);
+  const tot = v / 100, m = Math.floor(tot / 60), sec = (tot % 60).toFixed(2).padStart(m ? 5 : 1, "0");
+  return m ? `${m}:${sec}` : sec;
 }
-
-/* ---------- Top 10 mundial por média (rankings.json) ---------- */
-
-function tabelaRanking(lista, ev) {
-  return `<div class="scroll"><table>
-    <tr><th>#</th><th>Nome</th><th>WCA ID</th><th>Média</th></tr>
-    ${lista.map((p, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td><a href="https://www.worldcubeassociation.org/persons/${p.id}" target="_blank">${p.nome}</a></td>
-        <td>${p.id}</td>
-        <td><strong>${formatar(p.best, ev, "average")}</strong></td>
-      </tr>`).join("")}
-  </table></div>`;
-}
-
-async function carregarRankings() {
+let cachePaises = null;
+async function carregarTabela() {
+  const ev = document.getElementById("filtro-mod").value;
+  const tipo = ev === "333mbf" ? "single" : document.getElementById("filtro-tipo").value;
+  const regFiltro = document.getElementById("filtro-regiao").value;
+  const box = document.getElementById("tabelas-box");
+  box.innerHTML = "<p style='padding:15px;'>Carregando classificação oficial...</p>";
   try {
-    const r = await fetch("rankings.json");
-    if (!r.ok) throw new Error("rankings.json não encontrado. Rode: python3 atualizar.py");
-    const dados = await r.json();
-
-    const blocos = EVENTOS
-      .filter(([ev]) => dados.eventos[ev]?.length)
-      .map(([ev, nome]) => {
-        const lista = dados.eventos[ev];
-        return `
-          <details class="modalidade" ${ev === "333" ? "open" : ""}>
-            <summary>
-              <span>${nome}</span>
-              <span class="recorde">Recorde: ${formatar(lista[0].best, ev, "average")} (${lista[0].nome})</span>
-            </summary>
-            ${tabelaRanking(lista, ev)}
-          </details>`;
-      });
-
-    out.innerHTML = blocos.join("") +
-      `<p><small>Dados oficiais da WCA${dados.atualizado ? " • exportação de " + dados.atualizado : ""}</small></p>`;
-  } catch (e) {
-    out.innerHTML = `<p class="erro">Erro ao carregar rankings: ${e.message}</p>`;
-  }
+    let lista = [];
+    if (regFiltro === "world") {
+      const d = await (await fetch(`${API}/results/rankings/${ev}/${tipo}`)).json();
+      const bruto = Array.isArray(d) ? d : (d.items || d.rankings || []);
+      lista = bruto.slice(0, 100).map((p, i) => ({
+        pos: p.world_rank || p.rank || (i + 1), id: p.person_id || p.wca_id || "", nome: p.person_name || p.name || "",
+        best: p.best || p.value, regiao: nomePais(p.person_country_id || p.country_iso2 || p.country_id || ""), comp: p.competition_name || p.competition_id || ""
+      }));
+    } else {
+      if (!cachePaises) cachePaises = await (await fetch("paises.json")).json();
+      lista = (cachePaises[regFiltro]?.[tipo]?.[ev] || []).slice(0, 100);
+    }
+    if (!lista.length) { box.innerHTML = "<p style='padding:15px;'>Nenhum resultado encontrado para este país.</p>"; return; }
+    const nomeEv = EVENTOS.find(x => x.includes(ev))?.at(1) || ev;
+    const linhas = lista.map(p => `<tr><td><span class="pos-badge">${p.pos}</span></td><td><a href="${SITE}/persons/${p.id}" target="_blank">${p.nome}</a></td><td><strong>${formatar(p.best, ev, tipo)}</strong></td><td>${p.regiao}</td><td>${p.comp}</td></tr>`).join("");
+    box.innerHTML = `<details class="modalidade" open><summary><span>${nomeEv.toUpperCase()} (${tipo === "single" ? "TEMPO ÚNICO" : "MÉDIA"})</span><span class="recorde">RECORDE: ${formatar(lista.at(0).best, ev, tipo)}</span></summary><div class="scroll"><table><tr><th>#</th><th>Nome</th><th>Resultado</th><th>Região</th><th>Competição</th></tr>${linhas}</table></div></details>`;
+  } catch (e) { box.innerHTML = `<p style="color:#E30613;">Erro: ${e.message}</p>`; }
 }
-
-/* ---------- Busca por WCA ID (API oficial da WCA) ---------- */
-
-async function buscarPessoa(idDigitado) {
-  const id = idDigitado.trim().toUpperCase();
-  if (!/^\d{4}[A-Z]{4}\d{2}$/.test(id)) {
-    boxPessoa.innerHTML = `<p class="erro">WCA ID inválido. O formato é 4 números + 4 letras + 2 números (ex: 2015SOLE01).</p>`;
-    return;
-  }
-  boxPessoa.textContent = "Buscando na WCA...";
+function iniciar() {
+  out.innerHTML = `<div class="filtro-box"><label><strong>MODALIDADE:</strong> <select id="filtro-mod">${EVENTOS.map(([ev, n]) => `<option value="${ev}">${n.toUpperCase()}</option>`).join("")}</select></label><label><strong>TIPO:</strong> <select id="filtro-tipo"><option value="single">TEMPO ÚNICO (SINGLE)</option><option value="average">MÉDIA (AVERAGE)</option></select></label><label><strong>REGIÃO:</strong> <select id="filtro-regiao">${REGIOES.map(([v, n]) => `<option value="${v}">${n}</option>`).join("")}</select></label></div><div id="tabelas-box"></div>`;
+  document.getElementById("filtro-mod").addEventListener("change", carregarTabela);
+  document.getElementById("filtro-tipo").addEventListener("change", carregarTabela);
+  document.getElementById("filtro-regiao").addEventListener("change", carregarTabela);
+  carregarTabela();
+}
+async function buscarPessoa() {
+  const id = inputId?.value.trim().toUpperCase();
+  if (!id) return;
+  boxPessoa.innerHTML = "<p>Consultando ficha oficial...</p>";
   try {
-    const d = await get(`${WCA}/persons/${id}`);
-    const linhas = Object.entries(d.personal_records || {}).map(([ev, r]) => ({
-      ev,
-      single: r.single?.best, average: r.average?.best,
-      sMundo: r.single?.world_rank, sBR: r.single?.country_rank,
-      aMundo: r.average?.world_rank, aBR: r.average?.country_rank,
-    }));
-    const ordem = EVENTOS.map((e) => e[0]);
-    linhas.sort((a, b) => ordem.indexOf(a.ev) - ordem.indexOf(b.ev));
-
-    boxPessoa.innerHTML = `
-      <div class="perfil">
-        <strong>${d.person.name}</strong><br>
-        ${id} • ${d.person.country_iso2} • ${d.competition_count} campeonatos •
-        <a href="https://www.worldcubeassociation.org/persons/${id}" target="_blank">ver na WCA</a>
-      </div>
-      <div class="scroll"><table>
-        <tr><th>Modalidade</th><th>Single</th><th>Rank Mundo</th><th>Rank BR</th><th>Média</th><th>Rank Mundo</th><th>Rank BR</th></tr>
-        ${linhas.map((l) => `
-          <tr>
-            <td>${NOME[l.ev] ?? l.ev}</td>
-            <td><strong>${formatar(l.single, l.ev, "single")}</strong></td>
-            <td>${l.sMundo ?? "—"}</td><td>${l.sBR ?? "—"}</td>
-            <td><strong>${formatar(l.average, l.ev, "average")}</strong></td>
-            <td>${l.aMundo ?? "—"}</td><td>${l.aBR ?? "—"}</td>
-          </tr>`).join("")}
-      </table></div>`;
-  } catch (e) {
-    boxPessoa.innerHTML = `<p class="erro">Não encontrei esse WCA ID (${e.message}).</p>`;
-  }
+    const d = await (await fetch(`${API}/persons/${id}`)).json();
+    const linhas = EVENTOS.filter(([ev]) => d.personal_records?.[ev]).map(([ev, n]) => `<tr><td><strong>${n}</strong></td><td>${formatar(d.personal_records[ev].single?.best, ev, "single")}</td><td>${formatar(d.personal_records[ev].average?.best, ev, "average")}</td></tr>`).join("");
+    boxPessoa.innerHTML = `<h4 style="color:#002454;margin:12px 0;">FICHA OFICIAL: ${d.person.name.toUpperCase()} (${d.person.wca_id}) — ${nomePais(d.person.country_iso2)}</h4><div class="scroll"><table><tr><th>MODALIDADE</th><th>SINGLE (1x)</th><th>MÉDIA (Ao5)</th></tr>${linhas}</table></div>`;
+  } catch { boxPessoa.innerHTML = "<p style='color:#E30613;font-weight:bold;'>Atleta não encontrado.</p>"; }
 }
-
-document.getElementById("btnBuscar").addEventListener("click", () => buscarPessoa(inputId.value));
-inputId.addEventListener("keydown", (e) => { if (e.key === "Enter") buscarPessoa(inputId.value); });
-carregarRankings();
+document.getElementById("btn-buscar")?.addEventListener("click", buscarPessoa);
+inputId?.addEventListener("keydown", (e) => { if (e.key === "Enter") buscarPessoa(); });
+iniciar();
