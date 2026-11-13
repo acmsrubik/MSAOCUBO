@@ -167,17 +167,27 @@
           <div id="feed-lista"></div>
         </div>
 
-        <!-- COLUNA DIREITA: DESTAQUES & EVENTOS WCA -->
+        <!-- COLUNA DIREITA: NÍVEL MUNDIAL & DESTAQUES -->
         <aside class="fb-right">
-          <div class="fb-side-card">
-            <h4 style="color:#002454; font-size:14px; margin:0 0 10px 0; border-bottom:1px solid #eee; padding-bottom:8px;">📅 Próximos Eventos WCA</h4>
-            <div id="widget-comps-laterais" style="font-size:13px; color:#555;">Carregando agenda...</div>
+          <div class="fb-side-card" style="border-top: 3px solid #E30613;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:11px; font-weight:800; color:#E30613; text-transform:uppercase;">🌍 Recordes Mundiais WCA</span>
+              <div>
+                <button type="button" onclick="mudarSlideWR(-1)" style="border:1px solid #ddd; background:#f0f2f5; border-radius:4px; cursor:pointer; padding:2px 7px; font-weight:bold;">‹</button>
+                <button type="button" onclick="mudarSlideWR(1)" style="border:1px solid #ddd; background:#f0f2f5; border-radius:4px; cursor:pointer; padding:2px 7px; font-weight:bold;">›</button>
+              </div>
+            </div>
+            <div id="wr-carousel-box"></div>
           </div>
+
+          <div class="fb-side-card" style="border-top: 3px solid #002454;">
+            <span style="font-size:11px; font-weight:800; color:#002454; text-transform:uppercase; display:block; margin-bottom:8px;">🔥 Post Mais Curtido</span>
+            <div id="top-post-widget"></div>
+          </div>
+
           <div class="fb-side-card">
-            <h4 style="color:#002454; font-size:14px; margin:0 0 8px 0;">🔥 Recorde Estadual MS</h4>
-            <p style="font-size:13px; color:#444; margin:0;">Modalidade <strong>3x3x3 Single</strong></p>
-            <div style="font-size:22px; font-weight:900; color:#E30613; margin:4px 0;">Sub-8.00s</div>
-            <small style="color:#65676b;">Consulte a aba Rankings WCA para ver a tabela completa.</small>
+            <h4 style="color:#002454; font-size:13px; margin:0 0 8px 0; border-bottom:1px solid #eee; padding-bottom:6px;">📅 Próximos Eventos WCA</h4>
+            <div id="widget-comps-laterais" style="font-size:12px; color:#555;">Carregando agenda oficial...</div>
           </div>
         </aside>
       </div>
@@ -249,27 +259,377 @@
     midiaBase64Temp = ""; tipoMidiaTemp = "";
     document.getElementById("feed-tempo-box").style.display = "none";
     document.getElementById("feed-midia-box").style.display = "none";
+    
+    // CARROSSEL DE RECORDES MUNDIAIS OFICIAIS WCA + LIKES + POST MAIS CURTIDO
+    const recordesWCA = [
+      { id: "wr333s", mod: "3x3x3 Cube • Single", tempo: "2.51s", atleta: "Xuanyi Geng (China)", evento: "Guangzhou Grand Open 2026", likes: 48 },
+      { id: "wr333a", mod: "3x3x3 Cube • Média (Ao5)", tempo: "3.51s", atleta: "Yiheng Wang (China)", evento: "Hefei Cubing League 2026", likes: 39 },
+      { id: "wr222s", mod: "2x2x2 Cube • Single", tempo: "0.39s", atleta: "Ziyu Ye (China)", evento: "Hefei Open 2025", likes: 31 },
+      { id: "wrohs",  mod: "3x3x3 Uma Mão • Single", tempo: "5.62s", atleta: "Patrick Ponce (EUA)", evento: "Mid-Atlantic Championship 2026", likes: 27 }
+    ];
+    let wrLikesUser = JSON.parse(localStorage.getItem("cms_wr_likes")) || {};
+    let idxWR = 0;
+
+    function renderWRCarousel() {
+      const box = document.getElementById("wr-carousel-box");
+      if (!box) return;
+      const r = recordesWCA[idxWR];
+      const liked = !!wrLikesUser[r.id];
+      const total = r.likes + (liked ? 1 : 0);
+      box.innerHTML = `
+        <div style="transition:0.3s;">
+          <div style="font-size:12px; font-weight:700; color:#002454;">${r.mod}</div>
+          <div style="font-size:28px; font-weight:900; color:#E30613; margin:4px 0;">${r.tempo}</div>
+          <div style="font-size:13px; font-weight:700; color:#1c1e21;">${r.atleta}</div>
+          <div style="font-size:11px; color:#65676b; margin-bottom:10px;">${r.evento}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:8px;">
+            <button type="button" onclick="curtirWR('${r.id}')" style="background:${liked ? "#ffe8ea" : "#f0f2f5"}; color:${liked ? "#E30613" : "#002454"}; border:none; padding:5px 12px; border-radius:16px; font-weight:700; font-size:12px; cursor:pointer;">
+              ${liked ? "❤️ Curtido" : "👍 Curtir Recorde"} (${total})
+            </button>
+            <span style="font-size:11px; color:#888;">${idxWR + 1}/${recordesWCA.length}</span>
+          </div>
+        </div>`;
+    }
+
+    function mudarSlideWR(dir) {
+      idxWR = (idxWR + dir + recordesWCA.length) % recordesWCA.length;
+      renderWRCarousel();
+    }
+
+    function curtirWR(id) {
+      wrLikesUser[id] = !wrLikesUser[id];
+      localStorage.setItem("cms_wr_likes", JSON.stringify(wrLikesUser));
+      renderWRCarousel();
+    }
+
+    function renderTopPostWidget() {
+      const box = document.getElementById("top-post-widget");
+      if (!box || !postsCubistas.length) return;
+      const ordenado = [...postsCubistas].sort((a, b) => {
+        const la = Object.values(a.reacoes || {}).reduce((x, y) => x + y, 0);
+        const lb = Object.values(b.reacoes || {}).reduce((x, y) => x + y, 0);
+        return lb - la;
+      });
+      const top = ordenado;
+      const total = Object.values(top.reacoes || {}).reduce((x, y) => x + y, 0);
+      box.innerHTML = `
+        <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
+          <strong style="font-size:12px; color:#002454; display:block;">${top.autor}</strong>
+          <p style="font-size:12px; color:#333; margin:5px 0; line-height:1.35;">${(top.texto || top.tempo).slice(0, 95)}${(top.texto || "").length > 95 ? "..." : ""}</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="font-size:11px; font-weight:bold; color:#E30613;">🔥 ${total} reações</span>
+            <button type="button" onclick="reagirPost(${top.id}, '🔥')" style="background:#002454; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">Dar Like</button>
+          </div>
+        </div>`;
+    }
+
+    const oldRenderFeed = renderFeed;
+    renderFeed = function() { oldRenderFeed(); renderTopPostWidget(); };
+    setInterval(() => mudarSlideWR(1), 6000);
+    renderWRCarousel();
+    renderTopPostWidget();
+
     renderFeed();
   }
   function reagirPost(id, emoji) {
     const p = postsCubistas.find(x => x.id === id); if (!p) return;
     if (p.minhaReacao === emoji) { p.reacoes[emoji] = Math.max(0, (p.reacoes[emoji] || 1) - 1); p.minhaReacao = ""; }
     else { if (p.minhaReacao) p.reacoes[p.minhaReacao] = Math.max(0, (p.reacoes[p.minhaReacao] || 1) - 1); p.reacoes[emoji] = (p.reacoes[emoji] || 0) + 1; p.minhaReacao = emoji; }
-    salvarFeed(); renderFeed();
+    salvarFeed(); 
+    // CARROSSEL DE RECORDES MUNDIAIS OFICIAIS WCA + LIKES + POST MAIS CURTIDO
+    const recordesWCA = [
+      { id: "wr333s", mod: "3x3x3 Cube • Single", tempo: "2.51s", atleta: "Xuanyi Geng (China)", evento: "Guangzhou Grand Open 2026", likes: 48 },
+      { id: "wr333a", mod: "3x3x3 Cube • Média (Ao5)", tempo: "3.51s", atleta: "Yiheng Wang (China)", evento: "Hefei Cubing League 2026", likes: 39 },
+      { id: "wr222s", mod: "2x2x2 Cube • Single", tempo: "0.39s", atleta: "Ziyu Ye (China)", evento: "Hefei Open 2025", likes: 31 },
+      { id: "wrohs",  mod: "3x3x3 Uma Mão • Single", tempo: "5.62s", atleta: "Patrick Ponce (EUA)", evento: "Mid-Atlantic Championship 2026", likes: 27 }
+    ];
+    let wrLikesUser = JSON.parse(localStorage.getItem("cms_wr_likes")) || {};
+    let idxWR = 0;
+
+    function renderWRCarousel() {
+      const box = document.getElementById("wr-carousel-box");
+      if (!box) return;
+      const r = recordesWCA[idxWR];
+      const liked = !!wrLikesUser[r.id];
+      const total = r.likes + (liked ? 1 : 0);
+      box.innerHTML = `
+        <div style="transition:0.3s;">
+          <div style="font-size:12px; font-weight:700; color:#002454;">${r.mod}</div>
+          <div style="font-size:28px; font-weight:900; color:#E30613; margin:4px 0;">${r.tempo}</div>
+          <div style="font-size:13px; font-weight:700; color:#1c1e21;">${r.atleta}</div>
+          <div style="font-size:11px; color:#65676b; margin-bottom:10px;">${r.evento}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:8px;">
+            <button type="button" onclick="curtirWR('${r.id}')" style="background:${liked ? "#ffe8ea" : "#f0f2f5"}; color:${liked ? "#E30613" : "#002454"}; border:none; padding:5px 12px; border-radius:16px; font-weight:700; font-size:12px; cursor:pointer;">
+              ${liked ? "❤️ Curtido" : "👍 Curtir Recorde"} (${total})
+            </button>
+            <span style="font-size:11px; color:#888;">${idxWR + 1}/${recordesWCA.length}</span>
+          </div>
+        </div>`;
+    }
+
+    function mudarSlideWR(dir) {
+      idxWR = (idxWR + dir + recordesWCA.length) % recordesWCA.length;
+      renderWRCarousel();
+    }
+
+    function curtirWR(id) {
+      wrLikesUser[id] = !wrLikesUser[id];
+      localStorage.setItem("cms_wr_likes", JSON.stringify(wrLikesUser));
+      renderWRCarousel();
+    }
+
+    function renderTopPostWidget() {
+      const box = document.getElementById("top-post-widget");
+      if (!box || !postsCubistas.length) return;
+      const ordenado = [...postsCubistas].sort((a, b) => {
+        const la = Object.values(a.reacoes || {}).reduce((x, y) => x + y, 0);
+        const lb = Object.values(b.reacoes || {}).reduce((x, y) => x + y, 0);
+        return lb - la;
+      });
+      const top = ordenado;
+      const total = Object.values(top.reacoes || {}).reduce((x, y) => x + y, 0);
+      box.innerHTML = `
+        <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
+          <strong style="font-size:12px; color:#002454; display:block;">${top.autor}</strong>
+          <p style="font-size:12px; color:#333; margin:5px 0; line-height:1.35;">${(top.texto || top.tempo).slice(0, 95)}${(top.texto || "").length > 95 ? "..." : ""}</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="font-size:11px; font-weight:bold; color:#E30613;">🔥 ${total} reações</span>
+            <button type="button" onclick="reagirPost(${top.id}, '🔥')" style="background:#002454; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">Dar Like</button>
+          </div>
+        </div>`;
+    }
+
+    const oldRenderFeed = renderFeed;
+    renderFeed = function() { oldRenderFeed(); renderTopPostWidget(); };
+    setInterval(() => mudarSlideWR(1), 6000);
+    renderWRCarousel();
+    renderTopPostWidget();
+
+    renderFeed();
   }
   function comentarFeed(id, e) {
     e.preventDefault(); const inp = document.getElementById(`inp-com-${id}`); if (!inp.value.trim()) return;
     const p = postsCubistas.find(x => x.id === id);
-    if (p) { p.comentarios.push({ id: Date.now(), autor: "Jefferson", texto: inp.value.trim(), likes: 0, liked: false, respostas: [] }); salvarFeed(); renderFeed(); }
+    if (p) { p.comentarios.push({ id: Date.now(), autor: "Jefferson", texto: inp.value.trim(), likes: 0, liked: false, respostas: [] }); salvarFeed(); 
+    // CARROSSEL DE RECORDES MUNDIAIS OFICIAIS WCA + LIKES + POST MAIS CURTIDO
+    const recordesWCA = [
+      { id: "wr333s", mod: "3x3x3 Cube • Single", tempo: "2.51s", atleta: "Xuanyi Geng (China)", evento: "Guangzhou Grand Open 2026", likes: 48 },
+      { id: "wr333a", mod: "3x3x3 Cube • Média (Ao5)", tempo: "3.51s", atleta: "Yiheng Wang (China)", evento: "Hefei Cubing League 2026", likes: 39 },
+      { id: "wr222s", mod: "2x2x2 Cube • Single", tempo: "0.39s", atleta: "Ziyu Ye (China)", evento: "Hefei Open 2025", likes: 31 },
+      { id: "wrohs",  mod: "3x3x3 Uma Mão • Single", tempo: "5.62s", atleta: "Patrick Ponce (EUA)", evento: "Mid-Atlantic Championship 2026", likes: 27 }
+    ];
+    let wrLikesUser = JSON.parse(localStorage.getItem("cms_wr_likes")) || {};
+    let idxWR = 0;
+
+    function renderWRCarousel() {
+      const box = document.getElementById("wr-carousel-box");
+      if (!box) return;
+      const r = recordesWCA[idxWR];
+      const liked = !!wrLikesUser[r.id];
+      const total = r.likes + (liked ? 1 : 0);
+      box.innerHTML = `
+        <div style="transition:0.3s;">
+          <div style="font-size:12px; font-weight:700; color:#002454;">${r.mod}</div>
+          <div style="font-size:28px; font-weight:900; color:#E30613; margin:4px 0;">${r.tempo}</div>
+          <div style="font-size:13px; font-weight:700; color:#1c1e21;">${r.atleta}</div>
+          <div style="font-size:11px; color:#65676b; margin-bottom:10px;">${r.evento}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:8px;">
+            <button type="button" onclick="curtirWR('${r.id}')" style="background:${liked ? "#ffe8ea" : "#f0f2f5"}; color:${liked ? "#E30613" : "#002454"}; border:none; padding:5px 12px; border-radius:16px; font-weight:700; font-size:12px; cursor:pointer;">
+              ${liked ? "❤️ Curtido" : "👍 Curtir Recorde"} (${total})
+            </button>
+            <span style="font-size:11px; color:#888;">${idxWR + 1}/${recordesWCA.length}</span>
+          </div>
+        </div>`;
+    }
+
+    function mudarSlideWR(dir) {
+      idxWR = (idxWR + dir + recordesWCA.length) % recordesWCA.length;
+      renderWRCarousel();
+    }
+
+    function curtirWR(id) {
+      wrLikesUser[id] = !wrLikesUser[id];
+      localStorage.setItem("cms_wr_likes", JSON.stringify(wrLikesUser));
+      renderWRCarousel();
+    }
+
+    function renderTopPostWidget() {
+      const box = document.getElementById("top-post-widget");
+      if (!box || !postsCubistas.length) return;
+      const ordenado = [...postsCubistas].sort((a, b) => {
+        const la = Object.values(a.reacoes || {}).reduce((x, y) => x + y, 0);
+        const lb = Object.values(b.reacoes || {}).reduce((x, y) => x + y, 0);
+        return lb - la;
+      });
+      const top = ordenado;
+      const total = Object.values(top.reacoes || {}).reduce((x, y) => x + y, 0);
+      box.innerHTML = `
+        <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
+          <strong style="font-size:12px; color:#002454; display:block;">${top.autor}</strong>
+          <p style="font-size:12px; color:#333; margin:5px 0; line-height:1.35;">${(top.texto || top.tempo).slice(0, 95)}${(top.texto || "").length > 95 ? "..." : ""}</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="font-size:11px; font-weight:bold; color:#E30613;">🔥 ${total} reações</span>
+            <button type="button" onclick="reagirPost(${top.id}, '🔥')" style="background:#002454; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">Dar Like</button>
+          </div>
+        </div>`;
+    }
+
+    const oldRenderFeed = renderFeed;
+    renderFeed = function() { oldRenderFeed(); renderTopPostWidget(); };
+    setInterval(() => mudarSlideWR(1), 6000);
+    renderWRCarousel();
+    renderTopPostWidget();
+
+    renderFeed(); }
   }
   function curtirComentario(postId, comId) {
     const c = postsCubistas.find(x => x.id === postId)?.comentarios.find(x => x.id === comId);
-    if (c) { c.liked = !c.liked; c.likes += c.liked ? 1 : -1; salvarFeed(); renderFeed(); }
+    if (c) { c.liked = !c.liked; c.likes += c.liked ? 1 : -1; salvarFeed(); 
+    // CARROSSEL DE RECORDES MUNDIAIS OFICIAIS WCA + LIKES + POST MAIS CURTIDO
+    const recordesWCA = [
+      { id: "wr333s", mod: "3x3x3 Cube • Single", tempo: "2.51s", atleta: "Xuanyi Geng (China)", evento: "Guangzhou Grand Open 2026", likes: 48 },
+      { id: "wr333a", mod: "3x3x3 Cube • Média (Ao5)", tempo: "3.51s", atleta: "Yiheng Wang (China)", evento: "Hefei Cubing League 2026", likes: 39 },
+      { id: "wr222s", mod: "2x2x2 Cube • Single", tempo: "0.39s", atleta: "Ziyu Ye (China)", evento: "Hefei Open 2025", likes: 31 },
+      { id: "wrohs",  mod: "3x3x3 Uma Mão • Single", tempo: "5.62s", atleta: "Patrick Ponce (EUA)", evento: "Mid-Atlantic Championship 2026", likes: 27 }
+    ];
+    let wrLikesUser = JSON.parse(localStorage.getItem("cms_wr_likes")) || {};
+    let idxWR = 0;
+
+    function renderWRCarousel() {
+      const box = document.getElementById("wr-carousel-box");
+      if (!box) return;
+      const r = recordesWCA[idxWR];
+      const liked = !!wrLikesUser[r.id];
+      const total = r.likes + (liked ? 1 : 0);
+      box.innerHTML = `
+        <div style="transition:0.3s;">
+          <div style="font-size:12px; font-weight:700; color:#002454;">${r.mod}</div>
+          <div style="font-size:28px; font-weight:900; color:#E30613; margin:4px 0;">${r.tempo}</div>
+          <div style="font-size:13px; font-weight:700; color:#1c1e21;">${r.atleta}</div>
+          <div style="font-size:11px; color:#65676b; margin-bottom:10px;">${r.evento}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:8px;">
+            <button type="button" onclick="curtirWR('${r.id}')" style="background:${liked ? "#ffe8ea" : "#f0f2f5"}; color:${liked ? "#E30613" : "#002454"}; border:none; padding:5px 12px; border-radius:16px; font-weight:700; font-size:12px; cursor:pointer;">
+              ${liked ? "❤️ Curtido" : "👍 Curtir Recorde"} (${total})
+            </button>
+            <span style="font-size:11px; color:#888;">${idxWR + 1}/${recordesWCA.length}</span>
+          </div>
+        </div>`;
+    }
+
+    function mudarSlideWR(dir) {
+      idxWR = (idxWR + dir + recordesWCA.length) % recordesWCA.length;
+      renderWRCarousel();
+    }
+
+    function curtirWR(id) {
+      wrLikesUser[id] = !wrLikesUser[id];
+      localStorage.setItem("cms_wr_likes", JSON.stringify(wrLikesUser));
+      renderWRCarousel();
+    }
+
+    function renderTopPostWidget() {
+      const box = document.getElementById("top-post-widget");
+      if (!box || !postsCubistas.length) return;
+      const ordenado = [...postsCubistas].sort((a, b) => {
+        const la = Object.values(a.reacoes || {}).reduce((x, y) => x + y, 0);
+        const lb = Object.values(b.reacoes || {}).reduce((x, y) => x + y, 0);
+        return lb - la;
+      });
+      const top = ordenado;
+      const total = Object.values(top.reacoes || {}).reduce((x, y) => x + y, 0);
+      box.innerHTML = `
+        <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
+          <strong style="font-size:12px; color:#002454; display:block;">${top.autor}</strong>
+          <p style="font-size:12px; color:#333; margin:5px 0; line-height:1.35;">${(top.texto || top.tempo).slice(0, 95)}${(top.texto || "").length > 95 ? "..." : ""}</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="font-size:11px; font-weight:bold; color:#E30613;">🔥 ${total} reações</span>
+            <button type="button" onclick="reagirPost(${top.id}, '🔥')" style="background:#002454; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">Dar Like</button>
+          </div>
+        </div>`;
+    }
+
+    const oldRenderFeed = renderFeed;
+    renderFeed = function() { oldRenderFeed(); renderTopPostWidget(); };
+    setInterval(() => mudarSlideWR(1), 6000);
+    renderWRCarousel();
+    renderTopPostWidget();
+
+    renderFeed(); }
   }
   function responderComentario(postId, comId) {
     const resp = prompt("Escreva sua resposta:"); if (!resp || !resp.trim()) return;
     const c = postsCubistas.find(x => x.id === postId)?.comentarios.find(x => x.id === comId);
-    if (c) { c.respostas = c.respostas || []; c.respostas.push({ autor: "Jefferson", texto: resp.trim() }); salvarFeed(); renderFeed(); }
+    if (c) { c.respostas = c.respostas || []; c.respostas.push({ autor: "Jefferson", texto: resp.trim() }); salvarFeed(); 
+    // CARROSSEL DE RECORDES MUNDIAIS OFICIAIS WCA + LIKES + POST MAIS CURTIDO
+    const recordesWCA = [
+      { id: "wr333s", mod: "3x3x3 Cube • Single", tempo: "2.51s", atleta: "Xuanyi Geng (China)", evento: "Guangzhou Grand Open 2026", likes: 48 },
+      { id: "wr333a", mod: "3x3x3 Cube • Média (Ao5)", tempo: "3.51s", atleta: "Yiheng Wang (China)", evento: "Hefei Cubing League 2026", likes: 39 },
+      { id: "wr222s", mod: "2x2x2 Cube • Single", tempo: "0.39s", atleta: "Ziyu Ye (China)", evento: "Hefei Open 2025", likes: 31 },
+      { id: "wrohs",  mod: "3x3x3 Uma Mão • Single", tempo: "5.62s", atleta: "Patrick Ponce (EUA)", evento: "Mid-Atlantic Championship 2026", likes: 27 }
+    ];
+    let wrLikesUser = JSON.parse(localStorage.getItem("cms_wr_likes")) || {};
+    let idxWR = 0;
+
+    function renderWRCarousel() {
+      const box = document.getElementById("wr-carousel-box");
+      if (!box) return;
+      const r = recordesWCA[idxWR];
+      const liked = !!wrLikesUser[r.id];
+      const total = r.likes + (liked ? 1 : 0);
+      box.innerHTML = `
+        <div style="transition:0.3s;">
+          <div style="font-size:12px; font-weight:700; color:#002454;">${r.mod}</div>
+          <div style="font-size:28px; font-weight:900; color:#E30613; margin:4px 0;">${r.tempo}</div>
+          <div style="font-size:13px; font-weight:700; color:#1c1e21;">${r.atleta}</div>
+          <div style="font-size:11px; color:#65676b; margin-bottom:10px;">${r.evento}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:8px;">
+            <button type="button" onclick="curtirWR('${r.id}')" style="background:${liked ? "#ffe8ea" : "#f0f2f5"}; color:${liked ? "#E30613" : "#002454"}; border:none; padding:5px 12px; border-radius:16px; font-weight:700; font-size:12px; cursor:pointer;">
+              ${liked ? "❤️ Curtido" : "👍 Curtir Recorde"} (${total})
+            </button>
+            <span style="font-size:11px; color:#888;">${idxWR + 1}/${recordesWCA.length}</span>
+          </div>
+        </div>`;
+    }
+
+    function mudarSlideWR(dir) {
+      idxWR = (idxWR + dir + recordesWCA.length) % recordesWCA.length;
+      renderWRCarousel();
+    }
+
+    function curtirWR(id) {
+      wrLikesUser[id] = !wrLikesUser[id];
+      localStorage.setItem("cms_wr_likes", JSON.stringify(wrLikesUser));
+      renderWRCarousel();
+    }
+
+    function renderTopPostWidget() {
+      const box = document.getElementById("top-post-widget");
+      if (!box || !postsCubistas.length) return;
+      const ordenado = [...postsCubistas].sort((a, b) => {
+        const la = Object.values(a.reacoes || {}).reduce((x, y) => x + y, 0);
+        const lb = Object.values(b.reacoes || {}).reduce((x, y) => x + y, 0);
+        return lb - la;
+      });
+      const top = ordenado;
+      const total = Object.values(top.reacoes || {}).reduce((x, y) => x + y, 0);
+      box.innerHTML = `
+        <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
+          <strong style="font-size:12px; color:#002454; display:block;">${top.autor}</strong>
+          <p style="font-size:12px; color:#333; margin:5px 0; line-height:1.35;">${(top.texto || top.tempo).slice(0, 95)}${(top.texto || "").length > 95 ? "..." : ""}</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="font-size:11px; font-weight:bold; color:#E30613;">🔥 ${total} reações</span>
+            <button type="button" onclick="reagirPost(${top.id}, '🔥')" style="background:#002454; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">Dar Like</button>
+          </div>
+        </div>`;
+    }
+
+    const oldRenderFeed = renderFeed;
+    renderFeed = function() { oldRenderFeed(); renderTopPostWidget(); };
+    setInterval(() => mudarSlideWR(1), 6000);
+    renderWRCarousel();
+    renderTopPostWidget();
+
+    renderFeed(); }
   }
   function renderFeed() {
     const box = document.getElementById("feed-lista"); if (!box) return;
@@ -301,7 +661,77 @@
     document.getElementById("hero-titulo").textContent = "COMUNIDADE & FEED DOS CUBISTAS";
     document.getElementById("hero-sub").textContent = "Compartilhe fotos, vídeos de solves, melhores tempos (PBs) e novidades do cubo mágico.";
   });
-  renderFeed();
+  
+    // CARROSSEL DE RECORDES MUNDIAIS OFICIAIS WCA + LIKES + POST MAIS CURTIDO
+    const recordesWCA = [
+      { id: "wr333s", mod: "3x3x3 Cube • Single", tempo: "2.51s", atleta: "Xuanyi Geng (China)", evento: "Guangzhou Grand Open 2026", likes: 48 },
+      { id: "wr333a", mod: "3x3x3 Cube • Média (Ao5)", tempo: "3.51s", atleta: "Yiheng Wang (China)", evento: "Hefei Cubing League 2026", likes: 39 },
+      { id: "wr222s", mod: "2x2x2 Cube • Single", tempo: "0.39s", atleta: "Ziyu Ye (China)", evento: "Hefei Open 2025", likes: 31 },
+      { id: "wrohs",  mod: "3x3x3 Uma Mão • Single", tempo: "5.62s", atleta: "Patrick Ponce (EUA)", evento: "Mid-Atlantic Championship 2026", likes: 27 }
+    ];
+    let wrLikesUser = JSON.parse(localStorage.getItem("cms_wr_likes")) || {};
+    let idxWR = 0;
+
+    function renderWRCarousel() {
+      const box = document.getElementById("wr-carousel-box");
+      if (!box) return;
+      const r = recordesWCA[idxWR];
+      const liked = !!wrLikesUser[r.id];
+      const total = r.likes + (liked ? 1 : 0);
+      box.innerHTML = `
+        <div style="transition:0.3s;">
+          <div style="font-size:12px; font-weight:700; color:#002454;">${r.mod}</div>
+          <div style="font-size:28px; font-weight:900; color:#E30613; margin:4px 0;">${r.tempo}</div>
+          <div style="font-size:13px; font-weight:700; color:#1c1e21;">${r.atleta}</div>
+          <div style="font-size:11px; color:#65676b; margin-bottom:10px;">${r.evento}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:8px;">
+            <button type="button" onclick="curtirWR('${r.id}')" style="background:${liked ? "#ffe8ea" : "#f0f2f5"}; color:${liked ? "#E30613" : "#002454"}; border:none; padding:5px 12px; border-radius:16px; font-weight:700; font-size:12px; cursor:pointer;">
+              ${liked ? "❤️ Curtido" : "👍 Curtir Recorde"} (${total})
+            </button>
+            <span style="font-size:11px; color:#888;">${idxWR + 1}/${recordesWCA.length}</span>
+          </div>
+        </div>`;
+    }
+
+    function mudarSlideWR(dir) {
+      idxWR = (idxWR + dir + recordesWCA.length) % recordesWCA.length;
+      renderWRCarousel();
+    }
+
+    function curtirWR(id) {
+      wrLikesUser[id] = !wrLikesUser[id];
+      localStorage.setItem("cms_wr_likes", JSON.stringify(wrLikesUser));
+      renderWRCarousel();
+    }
+
+    function renderTopPostWidget() {
+      const box = document.getElementById("top-post-widget");
+      if (!box || !postsCubistas.length) return;
+      const ordenado = [...postsCubistas].sort((a, b) => {
+        const la = Object.values(a.reacoes || {}).reduce((x, y) => x + y, 0);
+        const lb = Object.values(b.reacoes || {}).reduce((x, y) => x + y, 0);
+        return lb - la;
+      });
+      const top = ordenado;
+      const total = Object.values(top.reacoes || {}).reduce((x, y) => x + y, 0);
+      box.innerHTML = `
+        <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
+          <strong style="font-size:12px; color:#002454; display:block;">${top.autor}</strong>
+          <p style="font-size:12px; color:#333; margin:5px 0; line-height:1.35;">${(top.texto || top.tempo).slice(0, 95)}${(top.texto || "").length > 95 ? "..." : ""}</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="font-size:11px; font-weight:bold; color:#E30613;">🔥 ${total} reações</span>
+            <button type="button" onclick="reagirPost(${top.id}, '🔥')" style="background:#002454; color:#fff; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">Dar Like</button>
+          </div>
+        </div>`;
+    }
+
+    const oldRenderFeed = renderFeed;
+    renderFeed = function() { oldRenderFeed(); renderTopPostWidget(); };
+    setInterval(() => mudarSlideWR(1), 6000);
+    renderWRCarousel();
+    renderTopPostWidget();
+
+    renderFeed();
 </script>
 </body>
 </html>
