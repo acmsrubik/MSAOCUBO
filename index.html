@@ -67,7 +67,16 @@
     .comment-meta span:hover { text-decoration: underline; color: #1877f2; }
     .reply-list { margin-left: 26px; border-left: 2px solid #e4e6eb; padding-left: 10px; margin-top: 4px; }
     @media (max-width: 1024px) { .fb-grid { grid-template-columns: 1fr; } .fb-left, .fb-right { display: none; } .brand, .fb-nav-right { width: auto; } }
+      /* Colunas laterais fixas ao rolar o Feed estilo Facebook */
+    .fb-left, .fb-right { position: sticky; top: 72px; align-self: start; max-height: calc(100vh - 88px); overflow-y: auto; }
   </style>
+  <meta name="description" content="MS AO CUBO - Rede Social Global de Speedcubing, Resultados WCA, Stories, Lives e Marketplace de Cubos Mágicos." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="MS AO CUBO | Rede Social Global de Cubo Mágico" />
+  <meta property="og:description" content="Conecte-se com cubistas do mundo todo, acompanhe rankings WCA, transmita lives e negocie cubos no Marketplace." />
+  <meta property="og:site_name" content="MS AO CUBO" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#1877f2" />
 </head>
 <body>
     <header class="top-nav">
@@ -92,6 +101,10 @@
         <button class="tab-btn" data-tab="tab-dashboard" title="Dashboard">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
         </button>
+        <button id="btn-tab-reels" class="tab-btn" data-tab="view-reels" onclick="if(window.abrirReelsCubo) window.abrirReelsCubo()" title="Reels & Vídeos Curtos">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4zm-6.5 11.5v-7l6 3.5-6 3.5z"/></svg>
+        </button>
+        <button class="tab-btn" data-tab="view-marketplace" onclick="if(window.abrirMarketplaceCubos) window.abrirMarketplaceCubos()" title="Marketplace de Cubos"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg></button>
       </nav>
       <div class="fb-nav-right">
         <button class="fb-circle-btn" title="Calendário" onclick="document.querySelector('[data-tab=tab-inicio]').click()">📅</button>
@@ -123,12 +136,14 @@
     </div>
 
     <!-- ABA 2: FEED CUBISTA (REDE SOCIAL) -->
+    <div id="view-reels" class="tab-view" style="display:none;"></div>
+    <div id="view-marketplace" class="tab-view" style="display:none;"></div>
     <div id="tab-feed" class="tab-view" style="display: block;">
       <div class="fb-grid">
         <!-- COLUNA ESQUERDA: PERFIL & FERRAMENTAS CUBISTAS -->
         <aside class="fb-left">
           <div class="fb-side-card">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #eee;">
+            <div onclick="if(window.abrirPerfilCubista) window.abrirPerfilCubista(window.getUsuarioAtualCMS().e)" style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #eee; cursor:pointer;" title="Abrir meu perfil">
               <div style="width:42px; height:42px; border-radius:50%; background:#002454; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900;">JF</div>
               <div>
                 <strong style="color:#002454; font-size:15px; display:block;">Jefferson</strong>
@@ -138,6 +153,8 @@
             <div class="fb-menu-item" onclick="document.querySelector('[data-tab=tab-inicio]').click()">📅 Próximos Campeonatos</div>
             <div class="fb-menu-item" onclick="document.querySelector('[data-tab=tab-rankings]').click()">🏆 Recordes & Rankings WCA</div>
             <div class="fb-menu-item" onclick="document.querySelector('[data-tab=tab-dashboard]').click()">📊 Estatísticas do Brasil</div>
+            <div class="fb-menu-item" onclick="if(window.abrirMarketplaceCubos) window.abrirMarketplaceCubos()">🛍️ Marketplace de Cubos</div>
+            <div class="fb-menu-item" onclick="if(window.abrirGeradorDivulgacao) window.abrirGeradorDivulgacao()">🚀 Divulgar Card & Link</div>
             <div class="fb-menu-item" onclick="gerarScrambleSidebar()">🧩 Gerar Scramble 3x3</div>
             <div id="sidebar-scramble-box" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-top:8px; border-left:3px solid #E30613;">
               <small style="font-weight:bold; color:#002454;">Embaralhamento Oficial:</small>
@@ -166,9 +183,10 @@
             <!-- PAINEL OPCIONAL DE FOTO / VÍDEO -->
             <div id="feed-midia-box" style="display:none; gap:8px; margin-top:10px; flex-direction:column; background:#f8f9fa; padding:10px; border-radius:8px;">
               <div style="display:flex; gap:8px; align-items:center;">
-                <label class="btn-social-gray" style="cursor:pointer;">📁 Escolher Foto/Vídeo do PC
+                <label class="btn-social-gray" style="cursor:pointer;">📁 Galeria / Arquivos
                   <input type="file" id="feed-arquivo" accept="image/*,video/*" style="display:none;" onchange="lerArquivoMidia(this)">
                 </label>
+                <label class="btn-social-gray" style="cursor:pointer;">📷 Câmera<input type="file" accept="image/*,video/*" capture="environment" style="display:none;" onchange="lerArquivoMidia(this)"></label>
                 <span id="nome-arquivo-midia" style="font-size:12px; color:#65676b;">Nenhum arquivo selecionado</span>
               </div>
               <input type="text" id="feed-url-midia" placeholder="Ou cole o link de uma foto ou vídeo do YouTube..." style="padding:7px; border:1px solid #ccc; border-radius:6px; width:100%; font-size:13px;">
@@ -177,6 +195,7 @@
             <div class="social-actions" style="flex-wrap:wrap; gap:6px;">
               <div style="display:flex; gap:6px;">
                 <button type="button" class="btn-social-gray" onclick="toggleBox('feed-midia-box', 'flex')">🖼️ Foto / Vídeo</button>
+              <button type="button" class="btn-social-gray" onclick="window.iniciarTransmissaoLiveFB()" style="color:#e41e3f;font-weight:700;">🎥 Vídeo ao vivo</button>
                 <button type="button" class="btn-social-gray" onclick="toggleBox('feed-tempo-box', 'flex')">⏱️ Tempo / PB</button>
               </div>
               <button type="button" class="btn-social-red" onclick="publicarNoFeed()">Publicar</button>
@@ -248,12 +267,19 @@
   <script src="dashboard.js"></script>
   <script src="auth-editorial.js?v=53"></script>
 
-  <script src="feed.js?v=2"></script>
-  <script src="apresentacao_wca.js"></script>
-  <script src="perfil_posts.js?v=5"></script>
+  <script src="feed.js?v=109"></script>
+  <script src="apresentacao_wca.js?v=3"></script>
+  <script src="perfil_posts.js?v=7"></script>
   <script src="capa_albuns.js?v=3"></script>
-  <script src="perfil.js?v=6"></script>
-  <script src="messenger.js"></script>
+  <script src="perfil.js?v=11"></script>
+  <script defer src="messenger.js"></script>
   <script src="fb_lightbox.js?v=5"></script>
+  <script src="cdn_optimizer.js?v=2"></script>
+  <script src="stories.js?v=24"></script>
+  <script defer src="live.js?v=2"></script>
+  <script defer src="marketplace.js?v=9"></script>
+  <script defer src="share_card.js?v=1"></script>
+  <script defer src="notifications.js?v=2"></script>
+  <script defer src="reels.js?v=10"></script>
 </body>
 </html>

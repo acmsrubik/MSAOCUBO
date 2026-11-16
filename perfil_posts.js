@@ -44,16 +44,16 @@ window.renderPostsDoPerfil = function(postsDoUsuario, iniciais) {
     return `
       <div class="social-card">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <div style="width:40px;height:40px;border-radius:50%;background:#1877f2;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;">${iniciais}</div>
+          ${window.getAvatarUsuarioCMS ? window.getAvatarUsuarioCMS(p.autorEmail, p.autor, iniciais, 40, "#1877f2") : `${window.getFotoAvatarCMS ? window.getFotoAvatarCMS(p.autor, iniciais, 40, "#1877f2") : `<div style="width:40px;height:40px;border-radius:50%;background:#1877f2;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;">${iniciais}</div>`}`}
           <div>
-            <div style="font-weight:700;font-size:14px;color:#050505;">${p.autor}</div>
-            <div style="font-size:12px;color:#65676b;">${p.data}</div>
+            <div onclick="if(window.abrirPerfilPorNome) window.abrirPerfilPorNome('${p.autor.replace(/'/g, "\\'")}')" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" style="font-weight:700;font-size:14px;color:#050505;cursor:pointer;">${p.autor}</div>
+            <div style="font-size:12px;color:#65676b;">${window.formatarDataPostFB ? window.formatarDataPostFB(p) : p.data}</div>
           </div>
+          <button type="button" onclick="if(window.toggleMenuPostFB) window.toggleMenuPostFB(event, ${p.id})" title="Mais opções" style="margin-left:auto;width:34px;height:34px;border-radius:50%;border:none;background:transparent;color:#65676b;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'">•••</button>
         </div>
-        <p style="margin:6px 0;font-size:15px;color:#050505;">${p.texto}</p>
+        <p style="margin:6px 0;font-size:15px;color:#050505;">${window.linkificarTextoFB ? window.linkificarTextoFB(p.texto) : p.texto}</p>
         ${p.tempo ? `<div class="solve-badge">⏱️ <strong>${p.tempo}</strong> (${p.mod})</div>` : ""}
-        ${p.midia && p.tipoMidia === "imagem" ? `<img src="${p.midia}" class="post-media">` : ""}
-        ${p.midia && p.tipoMidia === "video" ? `<video src="${p.midia}" controls class="post-media"></video>` : ""}
+        ${window.renderMidiaOuLinkFB ? window.renderMidiaOuLinkFB(p) : (p.midia && p.tipoMidia === "imagem" ? `<img src="${p.midia}" class="post-media">` : "")}
 
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 6px;font-size:13px;color:#65676b;border-bottom:1px solid #e4e6eb;margin-top:8px;">
           <div>${totalReacoes > 0 ? `${emojisAtivos} ${totalReacoes} ${totalReacoes === 1 ? "reação" : "reações"}` : "Seja o primeiro a curtir"}</div>

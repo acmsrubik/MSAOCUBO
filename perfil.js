@@ -71,8 +71,14 @@
     btnMeuPerfil.id = "btn-topo-meu-perfil";
     btnMeuPerfil.className = "fb-circle-btn";
     btnMeuPerfil.title = "Meu Perfil";
-    btnMeuPerfil.style.cssText = "background:#1877f2;color:#fff;font-weight:bold;font-size:13px;";
-    btnMeuPerfil.textContent = iniciais;
+    const extraEu = getPerfilExtra(eu.e);
+    if (extraEu.avatar) {
+      btnMeuPerfil.style.cssText = "padding:0;overflow:hidden;border:2px solid #1877f2;";
+      btnMeuPerfil.innerHTML = `<img src="${extraEu.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      btnMeuPerfil.style.cssText = "background:#1877f2;color:#fff;font-weight:bold;font-size:13px;";
+      btnMeuPerfil.textContent = iniciais;
+    }
     btnMeuPerfil.onclick = () => window.abrirPerfilCubista(window.getUsuarioAtualCMS().e);
     navRight.appendChild(btnMeuPerfil);
   }
@@ -153,12 +159,26 @@
 
   window.salvarDetalhesApresentacao = function(email) {
     const extra = getPerfilExtra(email);
-    extra.bio = document.getElementById("edit-bio")?.value.trim() || extra.bio;
-    extra.cidade = document.getElementById("edit-cidade")?.value.trim() || extra.cidade;
+    const bioEl = document.getElementById("edit-bio");
+    if (bioEl) extra.bio = bioEl.value.trim();
+    extra.cidade = document.getElementById("edit-cidade")?.value.trim() || "";
     extra.origem = document.getElementById("edit-origem")?.value.trim() || "";
     extra.trabalho = document.getElementById("edit-trabalho")?.value.trim() || "";
     extra.estudo = document.getElementById("edit-estudo")?.value.trim() || "";
     extra.cuboMain = document.getElementById("edit-cubo")?.value.trim() || "";
+    extra.nascimento = document.getElementById("edit-nascimento")?.value || "";
+    extra.inicio = document.getElementById("edit-inicio")?.value.trim() || "";
+    extra.clube = document.getElementById("edit-clube")?.value.trim() || "";
+    extra.visibilidade = {
+      cubo: document.getElementById("vis-cubo")?.checked ?? true,
+      trabalho: document.getElementById("vis-trabalho")?.checked ?? true,
+      estudo: document.getElementById("vis-estudo")?.checked ?? true,
+      cidade: document.getElementById("vis-cidade")?.checked ?? true,
+      origem: document.getElementById("vis-origem")?.checked ?? true,
+      idade: document.getElementById("vis-idade")?.checked ?? true,
+      inicio: document.getElementById("vis-inicio")?.checked ?? true,
+      clube: document.getElementById("vis-clube")?.checked ?? true
+    };
     extra.editandoBio = false;
     savePerfilExtra(email, extra);
     window.renderPerfil();
@@ -166,7 +186,14 @@
 
   window.abrirEditorApresentacao = function(email) {
     const extra = getPerfilExtra(email);
-    extra.editandoBio = !extra.editandoBio;
+    extra.editandoBio = true;
+    savePerfilExtra(email, extra);
+    window.renderPerfil();
+  };
+
+  window.fecharEditorApresentacao = function(email) {
+    const extra = getPerfilExtra(email);
+    extra.editandoBio = false;
     savePerfilExtra(email, extra);
     window.renderPerfil();
   };
@@ -180,6 +207,8 @@
       extra[tipo] = e.target.result;
       savePerfilExtra(email, extra);
       window.renderPerfil();
+      if (typeof renderFeed === "function") renderFeed();
+      if (window.aplicarFotoPerfilGlobal) window.aplicarFotoPerfilGlobal();
     };
     reader.readAsDataURL(file);
   };
@@ -296,8 +325,8 @@
       const postsHtml = window.renderPostsDoPerfil ? window.renderPostsDoPerfil(postsDoUsuario, iniciais) : "";
 
       conteudoSubAba = `
-        <div style="display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start;">
-          <div>${window.renderColunaEsquerdaPerfil ? window.renderColunaEsquerdaPerfil(alvo, extra, isMe, fotosDoUsuario) : ""}</div>
+        <div style="display:grid;grid-template-columns:380px 1fr;gap:16px;">
+          <div style="position:sticky;bottom:16px;align-self:end;">${window.renderColunaEsquerdaPerfil ? window.renderColunaEsquerdaPerfil(alvo, extra, isMe, fotosDoUsuario) : ""}</div>
           <div>${postsHtml}</div>
         </div>
       `;
@@ -314,7 +343,26 @@
         </tr>
       `).join("");
 
+      const idadeSobre = window.calcularIdadeCubista ? window.calcularIdadeCubista(extra.nascimento) : null;
+      const dataBr = extra.nascimento ? extra.nascimento.split("-").reverse().join("/") : "";
       conteudoSubAba = `
+        <div class="social-card" style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 style="margin:0;font-size:18px;">Sobre ${alvo.n}</h3>
+            ${isMe ? `<button onclick="window.abrirEditorApresentacao('${alvo.e}')" style="padding:6px 12px;border:none;border-radius:6px;background:#e4e6eb;font-weight:700;cursor:pointer;font-size:13px;">✏️ Editar detalhes</button>` : ""}
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;font-size:14px;color:#1c1e21;">
+            <div>🧊 <strong>Cubo principal:</strong> ${extra.cuboMain || "Não informado"}</div>
+            <div>💼 <strong>Cargo / Trabalho:</strong> ${extra.trabalho || "Não informado"}</div>
+            <div>🏆 <strong>Clube / Equipe:</strong> ${extra.clube || "Não informado"}</div>
+            <div>🎓 <strong>Formação:</strong> ${extra.estudo || "Não informado"}</div>
+            <div>🏠 <strong>Mora em:</strong> ${extra.cidade || "Não informado"}</div>
+            <div>📍 <strong>Cidade natal:</strong> ${extra.origem || "Não informado"}</div>
+            <div>🎂 <strong>Idade / Nascimento:</strong> ${idadeSobre !== null ? `${idadeSobre} anos (${dataBr})` : "Não informado"}</div>
+            <div>⏱️ <strong>Cubista desde:</strong> ${extra.inicio || "Não informado"}</div>
+          </div>
+          ${isMe ? (window.renderColunaEsquerdaPerfil ? "" : "") : ""}
+        </div>
         <div class="social-card">
           <h3 style="margin:0 0 12px;font-size:18px;">Dados Oficiais WCA & Cadastro</h3>
           ${isMe ? `

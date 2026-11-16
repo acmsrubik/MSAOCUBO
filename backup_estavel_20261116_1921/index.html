@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script src="capa_albuns.js?v=4"></script>
+  <script src="fix_resposta_direta.js?v=5"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cubo Mágico MS | Federação & Comunidade Oficial</title>
+  <link rel="stylesheet" href="style.css" />
+      <style>
+    body { background: #f0f2f5 !important; margin: 0; font-family: "Segoe UI", Helvetica, Arial, sans-serif; color: #050505; }
+    
+    /* Barra Superior idêntica ao Facebook */
+    .top-nav { background: #fff !important; position: sticky; top: 0; z-index: 900; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 0 16px; height: 56px; }
+    .nav-flex { width: 100%; height: 56px; display: flex; justify-content: space-between; align-items: center; }
+    
+    /* Esquerda: Logo Redonda Azul + Busca Redonda */
+    .brand { display: flex; align-items: center; gap: 10px; width: 320px; }
+    .logo-cms { background: #1877f2; color: #fff; font-weight: 900; font-size: 16px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; letter-spacing: -0.5px; flex-shrink: 0; cursor: pointer; }
+    .fb-search-box { background: #f0f2f5; border-radius: 50px; padding: 0 14px; height: 40px; display: flex; align-items: center; gap: 8px; flex: 1; max-width: 240px; }
+    .fb-search-box input { background: transparent; border: none; outline: none; font-size: 14px; width: 100%; color: #050505; }
+    
+    /* Centro: Apenas Ícones Grandes estilo Facebook */
+    .tabs { display: flex; gap: 8px; height: 100%; align-items: center; justify-content: center; flex: 1; max-width: 680px; }
+    .tab-btn { height: 100%; flex: 1; max-width: 112px; display: flex; align-items: center; justify-content: center; border: none !important; background: transparent !important; color: #65676b !important; border-bottom: 3px solid transparent !important; padding: 0 !important; cursor: pointer; transition: 0.15s; position: relative; }
+    .tab-btn:hover { background: #f0f2f5 !important; border-radius: 8px; height: 48px; }
+    .tab-btn.active { color: #1877f2 !important; border-bottom: 3px solid #1877f2 !important; border-radius: 0 !important; height: 100% !important; }
+    .tab-btn svg { width: 26px; height: 26px; }
+    
+    /* Direita: Atalhos estilo Facebook */
+    .fb-nav-right { width: 320px; display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+    .fb-circle-btn { width: 40px; height: 40px; border-radius: 50%; background: #e4e6eb; border: none; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; color: #050505; }
+    .fb-circle-btn:hover { background: #d8dadf; }
+
+    /* Oculta a faixa escura sem quebrar os IDs do JS */
+    .hero { display: none !important; }
+
+    /* Layout Principal e Cards estilo Facebook */
+    main.container { max-width: 1360px; margin: 16px auto 0; padding: 0 16px 40px; }
+    .card-section { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .feed-box { max-width: 680px; margin: 0 auto; }
+    .social-card { background: #fff; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: none; }
+    .social-input { width: 100%; background: #f0f2f5; border: none; border-radius: 20px; padding: 10px 16px; font-size: 15px; outline: none; box-sizing: border-box; }
+    .social-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid #e4e6eb; }
+    .btn-social-red { background: #1877f2; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+    .btn-social-red:hover { background: #166fe5; }
+    .btn-social-gray { background: transparent; color: #65676b; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+    .btn-social-gray:hover { background: #f0f2f5; }
+    .solve-badge { background: #f0f2f5; border-left: 4px solid #1877f2; padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
+  
+    /* Grid de 3 colunas igual ao Facebook */
+    .fb-grid { display: grid; grid-template-columns: 280px 1fr 300px; gap: 24px; align-items: start; }
+    .fb-left .fb-side-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+    .fb-right .fb-side-card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 16px; border: none; }
+    .fb-menu-item { display: flex; align-items: center; gap: 12px; padding: 10px 8px; border-radius: 8px; cursor: pointer; font-weight: 600; color: #050505; font-size: 15px; transition: 0.15s; }
+    .fb-menu-item:hover { background: #e4e6eb; }
+    
+    .reaction-wrapper { position: relative; display: inline-block; flex: 1; }
+    .reaction-bar { display: none; position: absolute; bottom: 100%; left: 0; background: #fff; border-radius: 30px; padding: 6px 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.18); border: 1px solid #ddd; gap: 8px; z-index: 50; margin-bottom: 6px; }
+    .reaction-wrapper:hover .reaction-bar { display: flex; }
+    .react-emoji { font-size: 20px; cursor: pointer; transition: transform 0.15s; border: none; background: none; padding: 2px; }
+    .react-emoji:hover { transform: scale(1.35); }
+    .post-media { width: 100%; max-height: 460px; object-fit: cover; border-radius: 8px; margin-top: 10px; }
+    .comment-bubble { background: #f0f2f5; padding: 8px 12px; border-radius: 16px; font-size: 13px; display: inline-block; max-width: 100%; }
+    .comment-meta { display: flex; gap: 12px; font-size: 11px; color: #65676b; font-weight: 700; margin: 3px 0 8px 10px; }
+    .comment-meta span { cursor: pointer; }
+    .comment-meta span:hover { text-decoration: underline; color: #1877f2; }
+    .reply-list { margin-left: 26px; border-left: 2px solid #e4e6eb; padding-left: 10px; margin-top: 4px; }
+    @media (max-width: 1024px) { .fb-grid { grid-template-columns: 1fr; } .fb-left, .fb-right { display: none; } .brand, .fb-nav-right { width: auto; } }
+      /* Colunas laterais fixas ao rolar o Feed estilo Facebook */
+    .fb-left, .fb-right { position: sticky; top: 72px; align-self: start; max-height: calc(100vh - 88px); overflow-y: auto; }
+  </style>
+  <meta name="description" content="MS AO CUBO - Rede Social Global de Speedcubing, Resultados WCA, Stories, Lives e Marketplace de Cubos Mágicos." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="MS AO CUBO | Rede Social Global de Cubo Mágico" />
+  <meta property="og:description" content="Conecte-se com cubistas do mundo todo, acompanhe rankings WCA, transmita lives e negocie cubos no Marketplace." />
+  <meta property="og:site_name" content="MS AO CUBO" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#1877f2" />
+</head>
+<body>
+    <header class="top-nav">
+    <div class="nav-flex">
+      <div class="brand">
+        <div class="logo-cms" onclick="document.querySelector('[data-tab=tab-feed]').click()">CMS</div>
+        <div class="fb-search-box">
+          <span>🔍</span>
+          <input type="text" placeholder="Pesquisar no Cubo Mágico MS" />
+        </div>
+      </div>
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="tab-feed" title="Feed">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.1L1 12h3v9h7v-6h2v6h7v-9h3L12 2.1z"/></svg>
+        </button>
+        <button class="tab-btn" data-tab="tab-inicio" title="Calendário WCA">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+        </button>
+        <button class="tab-btn" data-tab="tab-rankings" title="Rankings WCA">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+        </button>
+        <button class="tab-btn" data-tab="tab-dashboard" title="Dashboard">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        </button>
+        <button id="btn-tab-reels" class="tab-btn" data-tab="view-reels" onclick="if(window.abrirReelsCubo) window.abrirReelsCubo()" title="Reels & Vídeos Curtos">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4zm-6.5 11.5v-7l6 3.5-6 3.5z"/></svg>
+        </button>
+        <button class="tab-btn" data-tab="view-marketplace" onclick="if(window.abrirMarketplaceCubos) window.abrirMarketplaceCubos()" title="Marketplace de Cubos"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg></button>
+      </nav>
+      <div class="fb-nav-right">
+        <button class="fb-circle-btn" title="Calendário" onclick="document.querySelector('[data-tab=tab-inicio]').click()">📅</button>
+        <button class="fb-circle-btn" title="Rankings" onclick="document.querySelector('[data-tab=tab-rankings]').click()">🏆</button>
+        <button class="fb-circle-btn" title="Dashboard" onclick="document.querySelector('[data-tab=tab-dashboard]').click()">📊</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <span class="badge">TEMPORADA OFICIAL WCA</span>
+      <h2 id="hero-titulo">COMUNIDADE & FEED DOS CUBISTAS</h2>
+      <p id="hero-sub">Compartilhe seus melhores tempos (PBs), scrambles e novidades do cubo mágico.</p>
+    </div>
+  </section>
+  <main class="container">
+    <!-- ABA 1: INÍCIO (CALENDÁRIO OFICIAL WCA & NOTÍCIAS) -->
+    <div id="tab-inicio" class="tab-view" style="display: none;">
+      <section class="card-section">
+        <h3 class="sec-title">PRÓXIMAS COMPETIÇÕES NO BRASIL (PRÓXIMOS 30 DIAS)</h3>
+        <div id="proximas-comps">Carregando calendário oficial da WCA...</div>
+      </section>
+
+      <section class="card-section" style="margin-top: 24px;">
+        <h3 class="sec-title">ÚLTIMAS NOTÍCIAS & COMUNICADOS</h3>
+        <div id="lista-noticias">Carregando notícias...</div>
+      </section>
+    </div>
+
+    <!-- ABA 2: FEED CUBISTA (REDE SOCIAL) -->
+    <div id="view-reels" class="tab-view" style="display:none;"></div>
+    <div id="view-marketplace" class="tab-view" style="display:none;"></div>
+    <div id="tab-feed" class="tab-view" style="display: block;">
+      <div class="fb-grid">
+        <!-- COLUNA ESQUERDA: PERFIL & FERRAMENTAS CUBISTAS -->
+        <aside class="fb-left">
+          <div class="fb-side-card">
+            <div onclick="if(window.abrirPerfilCubista) window.abrirPerfilCubista(window.getUsuarioAtualCMS().e)" style="display:flex; align-items:center; gap:10px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #eee; cursor:pointer;" title="Abrir meu perfil">
+              <div style="width:42px; height:42px; border-radius:50%; background:#002454; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900;">JF</div>
+              <div>
+                <strong style="color:#002454; font-size:15px; display:block;">Jefferson</strong>
+                <span style="font-size:12px; color:#65676b;">Membro Oficial • MS</span>
+              </div>
+            </div>
+            <div class="fb-menu-item" onclick="document.querySelector('[data-tab=tab-inicio]').click()">📅 Próximos Campeonatos</div>
+            <div class="fb-menu-item" onclick="document.querySelector('[data-tab=tab-rankings]').click()">🏆 Recordes & Rankings WCA</div>
+            <div class="fb-menu-item" onclick="document.querySelector('[data-tab=tab-dashboard]').click()">📊 Estatísticas do Brasil</div>
+            <div class="fb-menu-item" onclick="if(window.abrirMarketplaceCubos) window.abrirMarketplaceCubos()">🛍️ Marketplace de Cubos</div>
+            <div class="fb-menu-item" onclick="if(window.abrirGeradorDivulgacao) window.abrirGeradorDivulgacao()">🚀 Divulgar Card & Link</div>
+            <div class="fb-menu-item" onclick="gerarScrambleSidebar()">🧩 Gerar Scramble 3x3</div>
+            <div id="sidebar-scramble-box" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-top:8px; border-left:3px solid #E30613;">
+              <small style="font-weight:bold; color:#002454;">Embaralhamento Oficial:</small>
+              <div id="sidebar-scramble-txt" style="font-family:monospace; font-size:12px; color:#E30613; margin-top:4px;"></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- COLUNA CENTRAL: FEED PRINCIPAL -->
+        <div class="fb-center">
+          <div class="social-card">
+            <div style="display:flex; gap:10px; align-items:center;">
+              <div style="width:38px; height:38px; border-radius:50%; background:#002454; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">JF</div>
+              <input type="text" id="feed-texto" class="social-input" placeholder="No que você está treinando hoje, Jefferson?">
+            </div>
+
+            <!-- PAINEL OPCIONAL DE TEMPO / PB -->
+            <div id="feed-tempo-box" style="display:none; gap:8px; margin-top:10px; flex-wrap:wrap; background:#f8f9fa; padding:10px; border-radius:8px;">
+              <input type="text" id="feed-tempo" placeholder="Tempo (ex: 8.95s)" style="padding:7px; border:1px solid #ccc; border-radius:6px; width:130px;">
+              <select id="feed-mod" style="padding:7px; border:1px solid #ccc; border-radius:6px;">
+                <option>3x3x3</option><option>2x2x2</option><option>4x4x4</option><option>Pyraminx</option><option>3x3 OH</option><option>Megaminx</option>
+              </select>
+              <input type="text" id="feed-scramble" placeholder="Scramble (opcional)" style="padding:7px; border:1px solid #ccc; border-radius:6px; flex:1;">
+            </div>
+
+            <!-- PAINEL OPCIONAL DE FOTO / VÍDEO -->
+            <div id="feed-midia-box" style="display:none; gap:8px; margin-top:10px; flex-direction:column; background:#f8f9fa; padding:10px; border-radius:8px;">
+              <div style="display:flex; gap:8px; align-items:center;">
+                <label class="btn-social-gray" style="cursor:pointer;">📁 Galeria / Arquivos
+                  <input type="file" id="feed-arquivo" accept="image/*,video/*" style="display:none;" onchange="lerArquivoMidia(this)">
+                </label>
+                <label class="btn-social-gray" style="cursor:pointer;">📷 Câmera<input type="file" accept="image/*,video/*" capture="environment" style="display:none;" onchange="lerArquivoMidia(this)"></label>
+                <span id="nome-arquivo-midia" style="font-size:12px; color:#65676b;">Nenhum arquivo selecionado</span>
+              </div>
+              <input type="text" id="feed-url-midia" placeholder="Ou cole o link de uma foto ou vídeo do YouTube..." style="padding:7px; border:1px solid #ccc; border-radius:6px; width:100%; font-size:13px;">
+            </div>
+
+            <div class="social-actions" style="flex-wrap:wrap; gap:6px;">
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn-social-gray" onclick="toggleBox('feed-midia-box', 'flex')">🖼️ Foto / Vídeo</button>
+              <button type="button" class="btn-social-gray" onclick="window.iniciarTransmissaoLiveFB()" style="color:#e41e3f;font-weight:700;">🎥 Vídeo ao vivo</button>
+                <button type="button" class="btn-social-gray" onclick="toggleBox('feed-tempo-box', 'flex')">⏱️ Tempo / PB</button>
+              </div>
+              <button type="button" class="btn-social-red" onclick="publicarNoFeed()">Publicar</button>
+            </div>
+          </div>
+
+          <div id="feed-lista"></div>
+        </div>
+
+        <!-- COLUNA DIREITA: NÍVEL MUNDIAL & DESTAQUES -->
+        <aside class="fb-right">
+          <div class="fb-side-card" style="border-top: 3px solid #E30613;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:11px; font-weight:800; color:#E30613; text-transform:uppercase;">🌍 Recordes Mundiais WCA</span>
+              <div>
+                <button type="button" onclick="mudarSlideWR(-1)" style="border:1px solid #ddd; background:#f0f2f5; border-radius:4px; cursor:pointer; padding:2px 7px; font-weight:bold;">‹</button>
+                <button type="button" onclick="mudarSlideWR(1)" style="border:1px solid #ddd; background:#f0f2f5; border-radius:4px; cursor:pointer; padding:2px 7px; font-weight:bold;">›</button>
+              </div>
+            </div>
+            <div id="wr-carousel-box"></div>
+          </div>
+
+          <div class="fb-side-card" style="border-top: 3px solid #002454;">
+            <span style="font-size:11px; font-weight:800; color:#002454; text-transform:uppercase; display:block; margin-bottom:8px;">🔥 Post Mais Curtido</span>
+            <div id="top-post-widget"></div>
+          </div>
+
+          <div class="fb-side-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:6px;">
+              <span style="font-size:11px; font-weight:800; color:#002454; text-transform:uppercase;">📅 Próximos Eventos WCA</span>
+              <div>
+                <button type="button" onclick="mudarSlideComp(-1)" style="border:1px solid #ddd; background:#f0f2f5; border-radius:4px; cursor:pointer; padding:2px 7px; font-weight:bold;">‹</button>
+                <button type="button" onclick="mudarSlideComp(1)" style="border:1px solid #ddd; background:#f0f2f5; border-radius:4px; cursor:pointer; padding:2px 7px; font-weight:bold;">›</button>
+              </div>
+            </div>
+            <div id="widget-comps-laterais">Carregando agenda oficial...</div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ABA 3: RANKINGS WCA & BUSCA DE ATLETAS -->
+    <div id="tab-rankings" class="tab-view" style="display: none;">
+      <section class="busca card-section">
+        <h3>🔎 BUSCAR CUBISTA PELO WCA ID</h3>
+        <div class="linha" style="display:flex; gap:10px; margin-top:10px;">
+          <input id="wcaid" placeholder="Ex: 2015SOLE01" maxlength="10" style="padding:10px; border:1px solid #ccc; border-radius:6px;" />
+          <button id="btn-buscar" style="background:#002454; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer;">BUSCAR ATLETA</button>
+        </div>
+        <div id="pessoa"></div>
+      </section>
+
+      <section class="card-section" style="margin-top: 24px;">
+        <h3>🏆 RANKINGS & RECORDES OFICIAIS WCA</h3>
+        <div id="resultado">Carregando rankings...</div>
+      </section>
+    </div>
+
+    <!-- ABA 4: DASHBOARD NACIONAL -->
+    <div id="tab-dashboard" class="tab-view" style="display: none;">
+      <div id="dashboard-root"></div>
+    </div>
+  </main>
+
+  <!-- SEUS SCRIPTS ORIGINAIS DA WCA, DASHBOARD E LOGIN -->
+  <script src="chart.min.js"></script>
+  <script src="inicio.js"></script>
+  <script type="module" src="main.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="auth-editorial.js?v=53"></script>
+
+  <script src="feed.js?v=109"></script>
+  <script src="apresentacao_wca.js?v=3"></script>
+  <script src="perfil_posts.js?v=7"></script>
+  <script src="capa_albuns.js?v=3"></script>
+  <script src="perfil.js?v=11"></script>
+  <script defer src="messenger.js"></script>
+  <script src="fb_lightbox.js?v=5"></script>
+  <script src="cdn_optimizer.js?v=2"></script>
+  <script src="stories.js?v=24"></script>
+  <script defer src="live.js?v=2"></script>
+  <script defer src="marketplace.js?v=9"></script>
+  <script defer src="share_card.js?v=1"></script>
+  <script defer src="notifications.js?v=2"></script>
+  <script defer src="reels.js?v=10"></script>
+</body>
+</html>

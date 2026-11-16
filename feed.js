@@ -1,3 +1,164 @@
+window.formatarDataPostFB = function(p) {
+  if (p.id && typeof p.id === "number" && p.id > 1600000000000) {
+    const d = new Date(p.id);
+    if (!isNaN(d.getTime())) {
+      const meses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+      const dia = d.getDate();
+      const mes = meses[d.getMonth()];
+      const hora = String(d.getHours()).padStart(2, "0");
+      const min = String(d.getMinutes()).padStart(2, "0");
+      return `${dia} de ${mes} às ${hora}:${min}`;
+    }
+  }
+  return p.data || "Hoje";
+};
+
+window.mostrarHoverCardPerfil = function(event, nome) {
+  if (!nome || nome === "Cubo Mágico MS • Oficial") return;
+  clearTimeout(window._hoverCardTimer);
+  const cadastrados = JSON.parse(localStorage.getItem("cms_u") || "[]");
+  const perfis = JSON.parse(localStorage.getItem("cms_perfis_v1") || "{}");
+  const eu = window.getUsuarioAtualCMS ? window.getUsuarioAtualCMS() : { n: "Jefferson", e: "jefferson@cubomagicoms.com.br" };
+  const alvoLower = nome.trim().toLowerCase();
+  let alvo = cadastrados.find(u => u.n && (u.n.toLowerCase() === alvoLower || alvoLower.startsWith(u.n.toLowerCase()) || u.n.toLowerCase().startsWith(alvoLower)));
+  if (!alvo && (alvoLower.includes("jefferson") || (eu.n && alvoLower.startsWith(eu.n.toLowerCase())))) alvo = eu;
+  if (!alvo) return;
+
+  const extra = perfis[alvo.e] || {};
+  const meuExtra = perfis[eu.e] || {};
+  const isMe = alvo.e === eu.e;
+  const isFriend = (meuExtra.amigos || []).includes(alvo.e);
+  const ini = alvo.n.slice(0, 2).toUpperCase();
+  const avatarHtml = extra.avatar
+    ? `<img src="${extra.avatar}" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid #e4e6eb;flex-shrink:0;">`
+    : `<div style="width:76px;height:76px;border-radius:50%;background:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex-shrink:0;">${ini}</div>`;
+
+  let card = document.getElementById("fb-profile-hover-card");
+  if (!card) {
+    card = document.createElement("div");
+    card.id = "fb-profile-hover-card";
+    card.onmouseenter = () => clearTimeout(window._hoverCardTimer);
+    card.onmouseleave = () => window.esconderHoverCardPerfil();
+    document.body.appendChild(card);
+  }
+
+  const rect = event.currentTarget.getBoundingClientRect();
+  const top = Math.min(window.innerHeight - 230, rect.bottom + 8);
+  const left = Math.min(window.innerWidth - 360, Math.max(12, rect.left));
+
+  card.style.cssText = `position:fixed;top:${top}px;left:${left}px;width:340px;background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.22);border:1px solid #dddfe2;padding:16px;z-index:99999;font-family:inherit;`;
+  card.innerHTML = `
+    <div style="display:flex;gap:14px;align-items:center;">
+      <div onclick="window.abrirPerfilCubista('${alvo.e}');window.esconderHoverCardPerfil();" style="cursor:pointer;">${avatarHtml}</div>
+      <div style="flex:1;min-width:0;">
+        <div onclick="window.abrirPerfilCubista('${alvo.e}');window.esconderHoverCardPerfil();" style="font-size:17px;font-weight:800;color:#050505;cursor:pointer;line-height:1.2;margin-bottom:6px;">${alvo.n}</div>
+        ${extra.cidade ? `<div style="font-size:13px;color:#65676b;margin-bottom:3px;">🏠 Mora em <strong>${extra.cidade}</strong></div>` : ""}
+        ${extra.cuboMain ? `<div style="font-size:13px;color:#65676b;margin-bottom:3px;">🧊 Cubo: <strong>${extra.cuboMain}</strong></div>` : ""}
+        ${extra.wcaData?.id ? `<div style="font-size:13px;color:#65676b;">🏅 WCA: <strong>${extra.wcaData.id}</strong></div>` : ""}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      ${isMe
+        ? `<button onclick="window.abrirPerfilCubista('${alvo.e}');window.esconderHoverCardPerfil();" style="flex:1;padding:8px 12px;background:#1877f2;color:#fff;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">Ver meu perfil</button>
+           <button onclick="window.abrirPerfilCubista('${alvo.e}');setTimeout(()=>window.abrirEditorApresentacao('${alvo.e}'),100);window.esconderHoverCardPerfil();" style="flex:1;padding:8px 12px;background:#e4e6eb;color:#050505;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">✏️ Editar perfil</button>`
+        : `<button onclick="window.alternarAmizade('${alvo.e}');window.esconderHoverCardPerfil();" style="flex:1;padding:8px 12px;background:${isFriend ? "#e7f3ff" : "#1877f2"};color:${isFriend ? "#1877f2" : "#fff"};border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">${isFriend ? "✓ Amigos" : "+ Adicionar amigo"}</button>
+           <button onclick="window.abrirPerfilCubista('${alvo.e}');window.esconderHoverCardPerfil();" style="padding:8px 12px;background:#e4e6eb;color:#050505;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">Ver perfil</button><button onclick="if(window.abrirJanelaChatFB) window.abrirJanelaChatFB('${alvo.e}','${alvo.n.replace(/'/g,"\\'")}');window.esconderHoverCardPerfil();" style="padding:8px 10px;background:#e4e6eb;color:#050505;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">💬</button>`
+      }
+    </div>
+  `;
+  card.style.display = "block";
+};
+
+window.esconderHoverCardPerfil = function() {
+  window._hoverCardTimer = setTimeout(() => {
+    const card = document.getElementById("fb-profile-hover-card");
+    if (card) card.style.display = "none";
+  }, 260);
+};
+
+window.abrirPerfilPorNome = function(nome) {
+  if (!nome || nome === "Cubo Mágico MS • Oficial") return;
+  const cadastrados = JSON.parse(localStorage.getItem("cms_u") || "[]");
+  const s = JSON.parse(localStorage.getItem("cms_s") || "null") || { n: "Jefferson", e: "jefferson@cubomagicoms.com.br" };
+  const alvoLower = nome.trim().toLowerCase();
+  let encontrado = cadastrados.find(u => u.n && (u.n.toLowerCase() === alvoLower || alvoLower.startsWith(u.n.toLowerCase()) || u.n.toLowerCase().startsWith(alvoLower)));
+  if (!encontrado && (alvoLower.includes("jefferson") || (s.n && alvoLower.startsWith(s.n.toLowerCase())))) {
+    encontrado = s;
+  }
+  if (encontrado && window.abrirPerfilCubista) {
+    window.abrirPerfilCubista(encontrado.e);
+  }
+};
+
+window.getFotoAvatarCMS = function(nome, iniciais, size, bg) {
+  const perfis = JSON.parse(localStorage.getItem("cms_perfis_v1") || "{}");
+  const s = JSON.parse(localStorage.getItem("cms_s") || "null") || { n: "Jefferson", e: "jefferson@cubomagicoms.com.br" };
+  let foto = "";
+  if (nome && nome !== "Cubo Mágico MS • Oficial") {
+    if (s.n && nome.toLowerCase().startsWith(s.n.toLowerCase()) && perfis[s.e]?.avatar) {
+      foto = perfis[s.e].avatar;
+    } else if (nome.toLowerCase().includes("jefferson")) {
+      const k = Object.keys(perfis).find(e => perfis[e]?.avatar);
+      if (k) foto = perfis[k].avatar;
+    }
+  }
+  const ini = (iniciais || (nome || "CM").slice(0, 2)).toUpperCase();
+  if (foto) {
+    return `<img src="${foto}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #dddfe2;">`;
+  }
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;flex-shrink:0;">${ini}</div>`;
+};
+
+window.aplicarFotoPerfilGlobal = function() {
+  const perfis = JSON.parse(localStorage.getItem("cms_perfis_v1") || "{}");
+  const s = JSON.parse(localStorage.getItem("cms_s") || "null") || { n: "Jefferson", e: "jefferson@cubomagicoms.com.br" };
+  const foto = perfis[s.e]?.avatar || Object.values(perfis).find(x => x && x.avatar)?.avatar || "";
+  if (!foto) return;
+
+  const btnTopo = document.getElementById("btn-topo-meu-perfil");
+  if (btnTopo && !btnTopo.querySelector("img")) {
+    btnTopo.style.cssText = "padding:0;overflow:hidden;border:2px solid #1877f2;";
+    btnTopo.innerHTML = `<img src="${foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+  }
+
+  document.querySelectorAll(".fb-left div, .feed-box div, .social-card div").forEach(el => {
+    if (el.children.length === 0 && /^(JF|JE)$/i.test(el.textContent.trim())) {
+      const w = el.offsetWidth || 38;
+      const h = el.offsetHeight || 38;
+      el.innerHTML = `<img src="${foto}" style="width:${w}px;height:${h}px;border-radius:50%;object-fit:cover;display:block;">`;
+      el.style.background = "transparent";
+      el.style.padding = "0";
+      el.style.overflow = "hidden";
+    }
+  });
+};
+document.addEventListener("DOMContentLoaded", () => setTimeout(window.aplicarFotoPerfilGlobal, 300));
+setInterval(window.aplicarFotoPerfilGlobal, 1200);
+
+window.getAvatarUsuarioCMS = function(email, nome, iniciais, size = 38, bg = "#002454") {
+  const perfis = JSON.parse(localStorage.getItem("cms_perfis_v1") || "{}");
+  const usuarios = JSON.parse(localStorage.getItem("cms_u") || "[]");
+  const sessao = JSON.parse(localStorage.getItem("cms_s") || "null");
+  let foto = "";
+  if (email && perfis[email]?.avatar) {
+    foto = perfis[email].avatar;
+  } else if (nome) {
+    const uMatch = usuarios.find(u => u.n && nome.toLowerCase().startsWith(u.n.toLowerCase()));
+    if (uMatch && perfis[uMatch.e]?.avatar) foto = perfis[uMatch.e].avatar;
+    else if (sessao && sessao.n && nome.toLowerCase().startsWith(sessao.n.toLowerCase()) && perfis[sessao.e]?.avatar) {
+      foto = perfis[sessao.e].avatar;
+    } else {
+      const primeiroEmail = Object.keys(perfis).find(k => perfis[k]?.avatar && nome.toLowerCase().includes("jefferson"));
+      if (primeiroEmail) foto = perfis[primeiroEmail].avatar;
+    }
+  }
+  const ini = (iniciais || (nome || "CM").slice(0, 2)).toUpperCase();
+  if (foto) {
+    return `<img src="${foto}" alt="${nome || ""}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #dddfe2;">`;
+  }
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:${Math.round(size*0.35)}px;flex-shrink:0;">${ini}</div>`;
+};
+
 
 window.abrirRespostaInline = function(el, postId, comIdx) {
   const boxId = `reply-inline-${postId}-${comIdx}`;
@@ -44,8 +205,8 @@ function lerArquivoMidia(input) {
 
 function extrairUrlMidia(url) {
   if (!url) return { src: "", tipo: "" };
-  if (url.includes("://youtube.com")) return { src: "https://youtube.com" + url.split("v=").at(1).split("&").at(0), tipo: "youtube" };
-  if (url.includes("youtu.be/")) return { src: "https://youtube.com" + url.split("youtu.be/").at(1).split("?").at(0), tipo: "youtube" };
+  if (url.includes("://youtube.com")) return { src: "https://youtube.com" + "/embed/" + "/embed/" + url.split("v=").at(1).split("&").at(0), tipo: "youtube" };
+  if (url.includes("youtu.be/")) return { src: "https://youtube.com" + "/embed/" + "/embed/" + url.split("youtu.be/").at(1).split("?").at(0), tipo: "youtube" };
   if (url.match(/\.(mp4|webm|ogg)$/i)) return { src: url, tipo: "video" };
   return { src: url, tipo: "imagem" };
 }
@@ -59,7 +220,7 @@ function publicarNoFeed() {
   let midiaFinal = midiaBase64Temp, tipoFinal = tipoMidiaTemp;
   if (!midiaFinal && urlDigitada) { const res = extrairUrlMidia(urlDigitada); midiaFinal = res.src; tipoFinal = res.tipo; }
   if (!texto && !tempo && !midiaFinal) return alert("Escreva algo, adicione foto/vídeo ou registre um tempo!");
-  postsCubistas.unshift({ id: Date.now(), autor: (JSON.parse(localStorage.getItem("cms_s")||"null")?.n || "Jefferson"), iniciais: (JSON.parse(localStorage.getItem("cms_s")||"null")?.n || "Jefferson").slice(0,2).toUpperCase(), data: "Agora mesmo", texto: texto || (tempo ? `Novo tempo no ${mod}!` : ""), tempo, mod, scramble, midia: midiaFinal, tipoMidia: tipoFinal, reacoes: { "👍": 0, "❤️": 0, "🔥": 0, "🤯": 0, "👏": 0 }, minhaReacao: "", comentarios: [] });
+  postsCubistas.unshift({ id: Date.now(), autor: (JSON.parse(localStorage.getItem("cms_s")||"null")?.n || "Jefferson"), autorEmail: (JSON.parse(localStorage.getItem("cms_s")||"null")?.e || "jefferson@cubomagicoms.com.br"), iniciais: (JSON.parse(localStorage.getItem("cms_s")||"null")?.n || "Jefferson").slice(0,2).toUpperCase(), data: "Agora mesmo", texto: texto || (tempo ? `Novo tempo no ${mod}!` : ""), tempo, mod, scramble, midia: midiaFinal, tipoMidia: tipoFinal, reacoes: { "👍": 0, "❤️": 0, "🔥": 0, "🤯": 0, "👏": 0 }, minhaReacao: "", comentarios: [] });
   salvarFeed();
   ["feed-texto","feed-tempo","feed-scramble","feed-url-midia"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
   document.getElementById("nome-arquivo-midia").textContent = "Nenhum arquivo selecionado";
@@ -124,21 +285,173 @@ function responderComentario(postId, comIdx) {
   box.querySelector("input").focus();
 }
 
-function renderFeed() {
+function extrairIdYoutubeFB(str) {
+  if (!str) return "";
+  const m = String(str).match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m.at(1) : "";
+}
+
+window.tocarUnicoVideoFeed = function(el, vidId, mudoAuto = false) {
+  document.querySelectorAll(".cms-yt-active-box").forEach(box => {
+    const oldId = box.getAttribute("data-vid");
+    box.outerHTML = window.gerarCapaYoutubeHTML(oldId);
+  });
+  document.querySelectorAll("video").forEach(v => v.pause());
+  const emb = ["https://youtube.com", "embed", vidId + "?autoplay=1&rel=0"].join("/");
+  el.outerHTML = `<div class="cms-yt-active-box" data-vid="${vidId}" style="margin-top:10px;border-radius:10px;overflow:hidden;background:#000;">
+    <iframe style="width:100%;height:340px;border:none;display:block;" src="${emb}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>`;
+};
+
+window.gerarCapaYoutubeHTML = function(vidId) {
+  const P = String.fromCharCode(46);
+  const thumb = "https://i" + P + "ytimg" + P + "com/vi/" + vidId + "/hqdefault.jpg";
+  const fallback = "https://img" + P + "youtube" + P + "com/vi/" + vidId + "/0.jpg";
+  return `<div data-yt-auto="${vidId}" onclick="window.tocarUnicoVideoFeed(this, '${vidId}', false)" style="position:relative;margin-top:10px;border-radius:10px;overflow:hidden;cursor:pointer;background:#000;aspect-ratio:16/9;">
+    <img src="${thumb}" onerror="this.onerror=null;this.src='${fallback}'" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:0.92;">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.22);">
+      <div style="width:64px;height:44px;background:#ff0000;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;box-shadow:0 4px 14px rgba(0,0,0,0.5);">▶</div>
+    </div>
+  </div>`;
+};
+
+window.toggleMenuPostFB = function(e, postId) {
+  e.stopPropagation();
+  const idMenu = "post-menu-drop-" + postId;
+  const existente = document.getElementById(idMenu);
+  document.querySelectorAll(".cms-post-menu-drop").forEach(el => el.remove());
+  if (existente) return;
+
+  const p = postsCubistas.find(x => x.id === postId);
+  if (!p) return;
+  const eu = window.getUsuarioAtualCMS ? window.getUsuarioAtualCMS() : { e: "jefferson@cubomagicoms.com.br" };
+  const souDono = p.autorEmail === eu.e;
+
+  const menu = document.createElement("div");
+  menu.id = idMenu;
+  menu.className = "cms-post-menu-drop";
+  menu.onclick = (ev) => ev.stopPropagation();
+  menu.style.cssText = "position:absolute;top:36px;right:0;width:220px;background:#fff;border-radius:10px;box-shadow:0 6px 22px rgba(0,0,0,0.2);border:1px solid #dddfe2;z-index:999;padding:6px;display:flex;flex-direction:column;gap:2px;";
+  menu.innerHTML = `
+    <button type="button" onclick="window.compartilharPostFB(${postId})" style="text-align:left;padding:9px 12px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:#050505;cursor:pointer;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'">🚀 Compartilhar publicação</button>
+    <button type="button" onclick="navigator.clipboard.writeText(window.location.href);document.querySelectorAll('.cms-post-menu-drop').forEach(el=>el.remove());alert('Link copiado!');" style="text-align:left;padding:9px 12px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:#050505;cursor:pointer;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'">🔗 Copiar link</button>
+    ${souDono ? `<button type="button" onclick="window.excluirPostFB(${postId})" style="text-align:left;padding:9px 12px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:700;color:#dc2626;cursor:pointer;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">🗑️ Excluir publicação</button>` : ""}
+  `;
+  e.currentTarget.parentElement.appendChild(menu);
+};
+
+window.compartilharPostFB = function(postId) {
+  document.querySelectorAll(".cms-post-menu-drop").forEach(el => el.remove());
+  const p = postsCubistas.find(x => x.id === postId);
+  if (!p) return;
+  if (window.abrirGeradorDivulgacao) {
+    window.abrirGeradorDivulgacao({
+      titulo: p.autor,
+      subtitulo: "Publicação no MS AO CUBO",
+      destaque: (p.texto || (p.tempo ? "Solve: " + p.tempo : "Confira no Feed")).slice(0, 52)
+    });
+  }
+};
+
+window.excluirPostFB = function(postId) {
+  document.querySelectorAll(".cms-post-menu-drop").forEach(el => el.remove());
+  if (!confirm("Deseja realmente excluir esta publicação?")) return;
+  const idx = postsCubistas.findIndex(x => x.id === postId);
+  if (idx !== -1) {
+    postsCubistas.splice(idx, 1);
+    localStorage.setItem("cms_posts_v1", JSON.stringify(postsCubistas));
+    localStorage.setItem("cms_feed_posts", JSON.stringify(postsCubistas));
+    if (typeof renderFeed === "function") renderFeed();
+    if (window.abrirPerfilCubista && document.getElementById("view-perfil")?.style.display !== "none") {
+      window.abrirPerfilCubista();
+    }
+  }
+};
+
+document.addEventListener("click", () => document.querySelectorAll(".cms-post-menu-drop").forEach(el => el.remove()));
+
+window.renderMidiaOuLinkFB = function(p) {
+  const url = String(p.midia || "").trim();
+  const vidId = extrairIdYoutubeFB(url) || extrairIdYoutubeFB(p.texto);
+  if (vidId) return window.gerarCapaYoutubeHTML(vidId);
+  if (!url) return "";
+  if (p.tipoMidia === "video" || url.startsWith("data:video") || /\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) {
+    return `<video class="post-media" controls onplay="document.querySelectorAll('video').forEach(v=>{if(v!==this)v.pause()})" src="${url}"></video>`;
+  }
+  if (url.startsWith("data:image") || /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(url)) {
+    return `<img class="post-media" loading="lazy" src="${url}" alt="Mídia">`;
+  }
+  let dominio = url;
+  try { dominio = new URL(url).hostname.replace(/^www\./, ""); } catch (e) {}
+  return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:12px 14px;background:#f0f2f5;border:1px solid #dddfe2;border-radius:10px;text-decoration:none;color:#050505;">
+    <div style="min-width:0;">
+      <div style="font-size:11px;font-weight:700;color:#65676b;text-transform:uppercase;">🔗 ${dominio}</div>
+      <div style="font-size:14px;font-weight:700;color:#1877f2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">${url}</div>
+      <div style="font-size:12px;color:#65676b;margin-top:2px;">Clique para abrir o link externo</div>
+    </div>
+    <span style="background:#1877f2;color:#fff;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;flex-shrink:0;">Abrir ↗</span>
+  </a>`;
+}
+
+window.linkificarTextoFB = function(txt) {
+  if (!txt) return "";
+  return String(txt).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#1877f2;font-weight:600;text-decoration:underline;">$1</a>');
+}
+
+let filtroAtivoFeed = "todos";
+
+window.setFiltroFeedCMS = function(tipo) {
+  filtroAtivoFeed = tipo;
+  renderFeed();
+};
+
+
+
+window.setFiltroFeedCMS = function(tipo) {
+  filtroAtivoFeed = tipo;
+  renderFeed();
+};
+
+window.renderFeed = function() {
   const box = document.getElementById("feed-lista");
   if (!box) return;
-  box.innerHTML = postsCubistas.map(p => {
+  const eu = window.getUsuarioAtualCMS ? window.getUsuarioAtualCMS() : { n: "Jefferson", e: "jefferson@cubomagicoms.com.br" };
+  const perfis = JSON.parse(localStorage.getItem("cms_perfis_v1") || "{}");
+  const meusAmigos = new Set((perfis[eu.e]?.amigos || []).map(a => a.toLowerCase()));
+
+  const listaFiltrada = postsCubistas.filter(p => {
+    if (filtroAtivoFeed === "amigos") {
+      return p.autorEmail === eu.e || meusAmigos.has((p.autor || "").toLowerCase());
+    }
+    if (filtroAtivoFeed === "solves") {
+      return Boolean(p.tempo && String(p.tempo).trim());
+    }
+    if (filtroAtivoFeed === "midias") {
+      return Boolean(p.midia) || Boolean(extrairIdYoutubeFB(p.texto));
+    }
+    return true;
+  });
+
+  const abasFeed = [
+    { id: "todos", label: "🔥 Para Você" },
+    { id: "amigos", label: "👥 Amigos" },
+    { id: "solves", label: "⏱️ Solves & Recordes" },
+    { id: "midias", label: "🎬 Vídeos & Fotos" }
+  ];
+
+  const barraFiltrosHtml = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;background:#fff;padding:10px 12px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,0.08);align-items:center;">
+    ${abasFeed.map(a => `<button type="button" onclick="window.setFiltroFeedCMS('${a.id}')" style="padding:7px 14px;border-radius:20px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:0.15s;background:${filtroAtivoFeed===a.id?'#1877f2':'#f0f2f5'};color:${filtroAtivoFeed===a.id?'#fff':'#050505'};">${a.label}</button>`).join("")}
+    <span style="margin-left:auto;font-size:12px;font-weight:700;color:#65676b;">${listaFiltrada.length} ${listaFiltrada.length === 1 ? "publicação" : "publicações"}</span>
+  </div>`;
+
+  const cardsHtml = listaFiltrada.length ? listaFiltrada.map(p => {
     const totalReacoes = Object.values(p.reacoes || {}).reduce((a, b) => a + b, 0);
     const emojisAtivos = Object.entries(p.reacoes || {}).filter(([_, qtd]) => qtd > 0).map(([em]) => em).join("");
-    let htmlMidia = "";
-    if (p.midia) {
-      if (p.tipoMidia === "youtube") htmlMidia = `<iframe class="post-media" style="height:320px;" src="${p.midia}" frameborder="0" allowfullscreen></iframe>`;
-      else if (p.tipoMidia === "video") htmlMidia = `<video class="post-media" controls src="${p.midia}"></video>`;
-      else htmlMidia = `<img class="post-media" src="${p.midia}" alt="Mídia">`;
-    }
-    const htmlComentarios = (p.comentarios || []).map(c => `<div style="margin-bottom:8px;"><div class="comment-bubble"><strong>${c.autor}:</strong> ${c.texto}</div><div class="comment-meta"><span style="color:${c.liked ? "#E30613" : "#65676b"}" onclick="curtirComentario(${p.id}, ${c.id})">👍 Curtir ${c.likes > 0 ? `(${c.likes})` : ""}</span><span onclick="responderComentario(${p.id}, ${c.id})">Responder</span></div>${(c.respostas || []).length ? `<div class="reply-list">${c.respostas.map(r => `<div style="margin-bottom:4px;"><div class="comment-bubble" style="background:#e9ebee;"><strong>${r.autor}:</strong> ${r.texto}</div></div>`).join("")}</div>` : ""}</div>`).join("");
-    return `<div class="social-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><div style="width:38px;height:38px;border-radius:50%;background:#002454;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;">${p.iniciais || "CM"}</div><div><strong style="color:#002454;font-size:14px;display:block;">${p.autor}</strong><span style="font-size:12px;color:#65676b;">${p.data}</span></div></div>${p.texto ? `<p style="font-size:14px;line-height:1.45;margin-bottom:6px;">${p.texto}</p>` : ""}${p.tempo ? `<div class="solve-badge"><strong style="font-size:18px;color:#002454;">⏱️ ${p.tempo}</strong> <span style="font-size:12px;color:#E30613;font-weight:bold;">(${p.mod})</span>${p.scramble ? `<div style="font-family:monospace;font-size:12px;color:#555;margin-top:4px;">Scramble: ${p.scramble}</div>` : ""}</div>` : ""}${htmlMidia}<div style="display:flex;justify-content:space-between;font-size:12px;color:#65676b;margin-top:10px;padding-bottom:6px;"><span>${emojisAtivos} ${totalReacoes > 0 ? totalReacoes + " reações" : "Seja o primeiro a reagir"}</span><span>${(p.comentarios || []).length} comentários</span></div><div class="social-actions" style="margin-top:0;"><div class="reaction-wrapper"><div class="reaction-bar">${["👍","❤️","🔥","🤯","👏"].map(em => `<button type="button" class="react-emoji" onclick="reagirPost(${p.id}, '${em}')">${em}</button>`).join("")}</div><button type="button" class="btn-social-gray" style="width:100%;color:${p.minhaReacao ? "#E30613" : "#002454"}" onclick="reagirPost(${p.id}, '👍')">${p.minhaReacao || "👍"} ${p.minhaReacao ? "Reagiu" : "Curtir"}</button></div><button type="button" class="btn-social-gray" style="flex:1;margin-left:8px;" onclick="document.getElementById('inp-com-${p.id}').focus()">💬 Comentar</button></div><div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;">${htmlComentarios}<form onsubmit="comentarFeed(${p.id}, event)" style="display:flex;gap:8px;margin-top:6px;"><input type="text" id="inp-com-${p.id}" placeholder="Escreva um comentário..." style="flex:1;background:#f0f2f5;border:none;border-radius:18px;padding:8px 14px;font-size:13px;outline:none;"><button type="submit" class="btn-social-red" style="padding:6px 14px;font-size:12px;">Enviar</button></form></div></div>`;
-  }).join("");
+    const htmlMidia = window.renderMidiaOuLinkFB(p);
+    const htmlComentarios = (p.comentarios || []).map(c => `<div style="margin-bottom:8px;"><div class="comment-bubble"><strong onclick="window.abrirPerfilPorNome('${c.autor.replace(/'/g, "\\'")}')" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" style="cursor:pointer;color:#050505;">${c.autor}:</strong> ${c.texto}</div><div class="comment-meta"><span style="color:${c.liked ? "#E30613" : "#65676b"}" onclick="curtirComentario(${p.id}, ${c.id})">👍 Curtir ${c.likes > 0 ? `(${c.likes})` : ""}</span><span onclick="responderComentario(${p.id}, ${c.id})">Responder</span></div>${(c.respostas || []).length ? `<div class="reply-list">${c.respostas.map(r => `<div style="margin-bottom:4px;"><div class="comment-bubble" style="background:#e9ebee;"><strong onclick="window.abrirPerfilPorNome('${r.autor.replace(/'/g, "\\'")}')" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" style="cursor:pointer;color:#050505;">${r.autor}:</strong> ${r.texto}</div></div>`).join("")}</div>` : ""}</div>`).join("");
+    return `<div class="social-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;">${window.getAvatarUsuarioCMS(p.autorEmail, p.autor, p.iniciais, 38, "#002454")}<div><strong onclick="window.abrirPerfilPorNome('${p.autor.replace(/'/g, "\\'")}')" onmouseenter="window.mostrarHoverCardPerfil(event, '${p.autor.replace(/'/g, "\\'")}')" onmouseleave="window.esconderHoverCardPerfil()" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" style="color:#002454;font-size:14px;display:block;cursor:pointer;">${p.autor}</strong><span style="font-size:12px;color:#65676b;">${window.formatarDataPostFB(p)}</span></div><button type="button" onclick="window.toggleMenuPostFB(event, ${p.id})" title="Mais opções" style="margin-left:auto;width:34px;height:34px;border-radius:50%;border:none;background:transparent;color:#65676b;font-size:18px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'">•••</button></div>${p.texto ? `<p style="font-size:14px;line-height:1.45;margin-bottom:6px;">${window.linkificarTextoFB(p.texto)}</p>` : ""}${p.tempo ? `<div class="solve-badge"><strong style="font-size:18px;color:#002454;">⏱️ ${p.tempo}</strong> <span style="font-size:12px;color:#E30613;font-weight:bold;">(${p.mod})</span>${p.scramble ? `<div style="font-family:monospace;font-size:12px;color:#555;margin-top:4px;">Scramble: ${p.scramble}</div>` : ""}</div>` : ""}${htmlMidia}<div style="display:flex;justify-content:space-between;font-size:12px;color:#65676b;margin-top:10px;padding-bottom:6px;"><span>${emojisAtivos} ${totalReacoes > 0 ? totalReacoes + " reações" : "Seja o primeiro a reagir"}</span><span>${(p.comentarios || []).length} comentários</span></div><div class="social-actions" style="margin-top:0;"><div class="reaction-wrapper"><div class="reaction-bar">${["👍","❤️","🔥","🤯","👏"].map(em => `<button type="button" class="react-emoji" onclick="reagirPost(${p.id}, '${em}')">${em}</button>`).join("")}</div><button type="button" class="btn-social-gray" style="width:100%;color:${p.minhaReacao ? "#E30613" : "#002454"}" onclick="reagirPost(${p.id}, '👍')">${p.minhaReacao || "👍"} ${p.minhaReacao ? "Reagiu" : "Curtir"}</button></div><button type="button" class="btn-social-gray" style="flex:1;margin-left:8px;" onclick="document.getElementById('inp-com-${p.id}').focus()">💬 Comentar</button></div><div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;">${htmlComentarios}<form onsubmit="comentarFeed(${p.id}, event)" style="display:flex;gap:8px;margin-top:6px;"><input type="text" id="inp-com-${p.id}" placeholder="Escreva um comentário..." style="flex:1;background:#f0f2f5;border:none;border-radius:18px;padding:8px 14px;font-size:13px;outline:none;"><button type="submit" class="btn-social-red" style="padding:6px 14px;font-size:12px;">Enviar</button></form></div></div>`;
+  }).join("") : `<div class="social-card" style="text-align:center;padding:32px;color:#65676b;"><div style="font-size:15px;font-weight:700;margin-bottom:8px;">Nenhuma publicação encontrada neste filtro.</div><button type="button" onclick="window.setFiltroFeedCMS('todos')" style="padding:8px 16px;border:none;border-radius:18px;background:#1877f2;color:#fff;font-weight:700;cursor:pointer;">Ver todas as publicações</button></div>`;
+  box.innerHTML = barraFiltrosHtml + cardsHtml;
   if (typeof renderTopPostWidget === "function") renderTopPostWidget();
 }
 function gerarScrambleSidebar() {
@@ -213,3 +526,73 @@ setInterval(() => mudarSlideWR(1), 6500);
 renderWRCarousel();
 iniciarWidgetCompsWCA();
 renderFeed();
+
+window.sincronizarAvataresDOM = function() {
+  const s = JSON.parse(localStorage.getItem("cms_s") || "null") || { n: "Jefferson", e: "jefferson@cubomagicoms.com.br" };
+  const perfis = JSON.parse(localStorage.getItem("cms_perfis_v1") || "{}");
+  const foto = perfis[s.e]?.avatar || Object.values(perfis).find(x => x && x.avatar)?.avatar || "";
+  if (!foto) return;
+  document.querySelectorAll(".fb-nav-right button, .fb-nav-right div, .fb-left div, .social-card div").forEach(el => {
+    if (el.children.length === 0 && /^(JE|JF)$/i.test(el.textContent.trim())) {
+      const w = el.offsetWidth || 38;
+      const h = el.offsetHeight || 38;
+      el.innerHTML = `<img src="${foto}" style="width:${w}px;height:${h}px;border-radius:50%;object-fit:cover;display:block;">`;
+      el.style.background = "transparent";
+      el.style.padding = "0";
+      el.style.overflow = "hidden";
+    }
+  });
+};
+setInterval(window.sincronizarAvataresDOM, 800);
+document.addEventListener("DOMContentLoaded", window.sincronizarAvataresDOM);
+
+
+(function() {
+  const timersVis = new WeakMap();
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const el = entry.target;
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.65) {
+        if (!timersVis.has(el)) {
+          const t = setTimeout(() => {
+            timersVis.delete(el);
+            if (!document.body.contains(el)) return;
+            const ytId = el.getAttribute("data-yt-auto");
+            if (ytId && window.tocarUnicoVideoFeed) {
+              window.tocarUnicoVideoFeed(el, ytId, true);
+            } else if (el.tagName === "VIDEO") {
+              document.querySelectorAll("video").forEach(v => { if (v !== el) v.pause(); });
+              document.querySelectorAll(".cms-yt-active-box").forEach(box => {
+                const oldId = box.getAttribute("data-vid");
+                if (oldId && window.gerarCapaYoutubeHTML) box.outerHTML = window.gerarCapaYoutubeHTML(oldId);
+              });
+              el.muted = true;
+              el.play().catch(() => {});
+            }
+          }, 3000);
+          timersVis.set(el, t);
+        }
+      } else {
+        if (timersVis.has(el)) {
+          clearTimeout(timersVis.get(el));
+          timersVis.delete(el);
+        }
+        if (el.classList && el.classList.contains("cms-yt-active-box")) {
+          const oldId = el.getAttribute("data-vid");
+          if (oldId && window.gerarCapaYoutubeHTML) el.outerHTML = window.gerarCapaYoutubeHTML(oldId);
+        } else if (el.tagName === "VIDEO" && !el.paused) {
+          el.pause();
+        }
+      }
+    });
+  }, { threshold: [0, 0.65] });
+
+  setInterval(() => {
+    document.querySelectorAll("[data-yt-auto], .cms-yt-active-box, video.post-media").forEach(el => {
+      if (!el.dataset.obsBound) {
+        el.dataset.obsBound = "1";
+        obs.observe(el);
+      }
+    });
+  }, 1200);
+})();
