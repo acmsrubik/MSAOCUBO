@@ -96,3 +96,14 @@ td a:hover { color: #E30613; text-decoration: underline; }
 .comp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px; }
 .comp-logo { width: 38px; height: 38px; object-fit: contain; background: transparent; flex-shrink: 0; }
 .comp-logo { width: 64px; height: 64px; object-fit: contain; background: transparent; flex-shrink: 0; border-radius: 6px; }
+
+/* Remove a faixa azul/vermelha antiga do topo do feed */
+.faixa-temporada-wca, 
+header + div > div:first-child, 
+.feed-header-banner,
+div[style*="background"],
+h2:contains("COMUNIDADE"),
+.container-faixa-topo {
+    display: none !important;
+}
+

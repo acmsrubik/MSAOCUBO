@@ -1,3 +1,30 @@
+
+window.abrirRespostaInline = function(el, postId, comIdx) {
+  const boxId = `reply-inline-${postId}-${comIdx}`;
+  const existente = document.getElementById(boxId);
+  if (existente) { existente.remove(); return; }
+  const p = postsCubistas.find(x => x.id === postId);
+  if (!p || !p.comentarios[comIdx]) return;
+  const meta = el.closest(".comment-meta") || el.parentElement;
+  const form = document.createElement("form");
+  form.id = boxId;
+  form.style.cssText = "display:flex;gap:6px;margin:6px 0 8px 24px;align-items:center;";
+  form.innerHTML = `<input type="text" placeholder="Responder a ${p.comentarios[comIdx].autor}..." autocomplete="off" style="flex:1;background:#f0f2f5;border:none;border-radius:18px;padding:7px 12px;font-size:12px;outline:none;"><button type="submit" style="background:#1877f2;color:#fff;border:none;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Responder</button>`;
+  form.onsubmit = function(ev) {
+    ev.preventDefault();
+    const txt = form.querySelector("input").value.trim();
+    if (!txt) return;
+    const eu = (window.getUsuarioAtualCMS ? window.getUsuarioAtualCMS().n : "Jefferson");
+    p.comentarios[comIdx].respostas = p.comentarios[comIdx].respostas || [];
+    p.comentarios[comIdx].respostas.push({ autor: eu, texto: txt });
+    salvarFeed();
+    renderFeed();
+    if (window.renderPerfil) window.renderPerfil();
+  };
+  meta.insertAdjacentElement("afterend", form);
+  form.querySelector("input").focus();
+};
+
 const postsBase = [{ id: 1, autor: "Cubo Mágico MS • Oficial", iniciais: "CMS", data: "Hoje", texto: "Bem-vindos ao Feed Cubista! Compartilhem fotos, vídeos de solves e PBs aqui.", tempo: "", mod: "", scramble: "", midia: "", tipoMidia: "", reacoes: { "👍": 1, "❤️": 0, "🔥": 0, "🤯": 0, "👏": 0 }, minhaReacao: "", comentarios: [] }];
 let postsCubistas = JSON.parse(localStorage.getItem("cms_feed_v2")) || postsBase;
 let midiaBase64Temp = "", tipoMidiaTemp = "";
@@ -32,7 +59,7 @@ function publicarNoFeed() {
   let midiaFinal = midiaBase64Temp, tipoFinal = tipoMidiaTemp;
   if (!midiaFinal && urlDigitada) { const res = extrairUrlMidia(urlDigitada); midiaFinal = res.src; tipoFinal = res.tipo; }
   if (!texto && !tempo && !midiaFinal) return alert("Escreva algo, adicione foto/vídeo ou registre um tempo!");
-  postsCubistas.unshift({ id: Date.now(), autor: "Jefferson", iniciais: "JF", data: "Agora mesmo", texto: texto || (tempo ? `Novo tempo no ${mod}!` : ""), tempo, mod, scramble, midia: midiaFinal, tipoMidia: tipoFinal, reacoes: { "👍": 0, "❤️": 0, "🔥": 0, "🤯": 0, "👏": 0 }, minhaReacao: "", comentarios: [] });
+  postsCubistas.unshift({ id: Date.now(), autor: (JSON.parse(localStorage.getItem("cms_s")||"null")?.n || "Jefferson"), iniciais: (JSON.parse(localStorage.getItem("cms_s")||"null")?.n || "Jefferson").slice(0,2).toUpperCase(), data: "Agora mesmo", texto: texto || (tempo ? `Novo tempo no ${mod}!` : ""), tempo, mod, scramble, midia: midiaFinal, tipoMidia: tipoFinal, reacoes: { "👍": 0, "❤️": 0, "🔥": 0, "🤯": 0, "👏": 0 }, minhaReacao: "", comentarios: [] });
   salvarFeed();
   ["feed-texto","feed-tempo","feed-scramble","feed-url-midia"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
   document.getElementById("nome-arquivo-midia").textContent = "Nenhum arquivo selecionado";
@@ -62,11 +89,39 @@ function curtirComentario(postId, comId) {
   if (c) { c.liked = !c.liked; c.likes += c.liked ? 1 : -1; salvarFeed(); renderFeed(); }
 }
 
-function responderComentario(postId, comId) {
-  const resp = prompt("Escreva sua resposta:");
-  if (!resp || !resp.trim()) return;
-  const c = postsCubistas.find(x => x.id === postId)?.comentarios.find(x => x.id === comId);
-  if (c) { c.respostas = c.respostas || []; c.respostas.push({ autor: "Jefferson", texto: resp.trim() }); salvarFeed(); renderFeed(); }
+function responderComentario(postId, comIdx) {
+  const boxId = `reply-box-${postId}-${comIdx}`;
+  let box = document.getElementById(boxId);
+  if (box) { box.remove(); return; }
+
+  const p = postsCubistas.find(x => x.id === postId);
+  if (!p || !p.comentarios[comIdx]) return;
+  const alvoAutor = p.comentarios[comIdx].autor;
+
+  const spanClicado = event && event.target ? event.target : null;
+  const containerMeta = spanClicado ? spanClicado.closest(".comment-meta") : null;
+  if (!containerMeta) return;
+
+  box = document.createElement("form");
+  box.id = boxId;
+  box.style.cssText = "display:flex;gap:6px;margin:6px 0 10px 26px;align-items:center;";
+  box.innerHTML = `
+    <input type="text" placeholder="Responder a ${alvoAutor}..." autocomplete="off" style="flex:1;background:#f0f2f5;border:none;border-radius:18px;padding:7px 12px;font-size:12px;outline:none;">
+    <button type="submit" style="background:#1877f2;color:#fff;border:none;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">Responder</button>
+  `;
+  box.onsubmit = (e) => {
+    e.preventDefault();
+    const val = box.querySelector("input").value.trim();
+    if (!val) return;
+    const eu = (window.getUsuarioAtualCMS ? window.getUsuarioAtualCMS().n : "Jefferson");
+    p.comentarios[comIdx].respostas = p.comentarios[comIdx].respostas || [];
+    p.comentarios[comIdx].respostas.push({ autor: eu, texto: val });
+    salvarFeed();
+    renderFeed();
+    if (window.renderPerfil) window.renderPerfil();
+  };
+  containerMeta.insertAdjacentElement("afterend", box);
+  box.querySelector("input").focus();
 }
 
 function renderFeed() {
